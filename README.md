@@ -18,6 +18,24 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Environment variables (Supabase connection)
+
+This project ships a minimal Supabase client scaffold only; the landing page
+does not query any data. To configure it:
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in the publishable/anon key from your Supabase dashboard
+   (Project Settings → API). Never put a `service_role`/secret key in a
+   `NEXT_PUBLIC_*` variable.
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://vzpqpxlatshisunzftop.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+The app builds and runs without the key because the landing page performs no
+Supabase requests.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
