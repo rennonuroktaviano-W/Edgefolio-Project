@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Logo } from "@/components/logo";
 import { siteConfig } from "@/config/site";
 
 // Cached so the dynamic year is safe to prerender under Cache Components.
@@ -17,13 +17,7 @@ export async function SiteFooter() {
         className="pointer-events-none absolute left-1/2 top-0 h-32 w-[44rem] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/5 blur-3xl"
       />
       <div className="relative mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
-        <Image
-          src="/edgefolio-logo.png"
-          alt="Edgefolio"
-          width={832}
-          height={192}
-          className="h-8 w-auto opacity-90"
-        />
+        <Logo className="h-8 w-auto opacity-90" />
         <p className="text-sm text-muted">
           &copy; {year} {siteConfig.name}. All rights reserved.
         </p>

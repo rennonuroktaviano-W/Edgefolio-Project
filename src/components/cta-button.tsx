@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useAuthModal } from "@/components/auth/auth-provider";
 import { siteConfig } from "@/config/site";
 
 const ctaClasses =
@@ -29,7 +29,7 @@ function ArrowIcon() {
 }
 
 export function CtaButton() {
-  const [notice, setNotice] = useState(false);
+  const { openAuth } = useAuthModal();
 
   if (siteConfig.cta.href) {
     return (
@@ -42,26 +42,14 @@ export function CtaButton() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <button
-        type="button"
-        className={ctaClasses}
-        aria-describedby="cta-notice"
-        onClick={() => setNotice(true)}
-      >
-        <Shine />
-        {siteConfig.cta.label}
-        <ArrowIcon />
-      </button>
-      <p
-        id="cta-notice"
-        aria-live="polite"
-        className="min-h-5 max-w-xs text-sm text-muted"
-      >
-        {notice
-          ? "Thanks for the interest — Edgefolio is still in preview. The app is coming soon."
-          : ""}
-      </p>
-    </div>
+    <button
+      type="button"
+      className={ctaClasses}
+      onClick={() => openAuth("signup")}
+    >
+      <Shine />
+      {siteConfig.cta.label}
+      <ArrowIcon />
+    </button>
   );
 }

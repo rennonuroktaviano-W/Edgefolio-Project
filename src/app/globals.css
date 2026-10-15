@@ -86,8 +86,8 @@ body {
 .bg-ambient {
   background:
     radial-gradient(
-      62rem 42rem at 50% -12%,
-      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      62rem 42rem at 50% -26%,
+      color-mix(in srgb, var(--color-accent) 7%, transparent),
       transparent 62%
     ),
     radial-gradient(
@@ -105,13 +105,13 @@ body {
 .bg-aurora {
   background:
     radial-gradient(
-      40rem 26rem at 18% 8%,
-      color-mix(in srgb, var(--color-accent) 20%, transparent),
+      34rem 24rem at 10% 32%,
+      color-mix(in srgb, var(--color-accent) 15%, transparent),
       transparent 60%
     ),
     radial-gradient(
-      34rem 26rem at 86% 4%,
-      color-mix(in srgb, var(--color-accent) 13%, transparent),
+      30rem 22rem at 90% 27%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
       transparent 62%
     );
   animation: var(--animate-aurora), var(--animate-blink);
@@ -225,7 +225,29 @@ body {
   transition:
     opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+}
+
+/* Auth modal entrance. */
+.auth-overlay {
+  animation: edgefolio-fade 0.2s ease forwards;
+}
+
+.auth-pop {
+  animation: edgefolio-reveal 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-msg-in {
+  animation: edgefolio-msg 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hide the scrollbar while keeping the area scrollable. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 .reveal-up.is-visible {
@@ -316,6 +338,17 @@ body {
   from {
     opacity: 0;
     transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes edgefolio-msg {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { AccountChip } from "@/components/auth/account-chip";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,7 +34,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <noscript>
           <style>{`.reveal-up{opacity:1 !important;transform:none !important}`}</style>
         </noscript>
-        {children}
+        <AuthProvider>
+          <AccountChip />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

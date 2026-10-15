@@ -6,9 +6,8 @@ export const siteConfig = {
     "Track your trades, understand your performance, and make every decision more intentional.",
   cta: {
     label: "Get Started",
-    // Frontend-only stage: no dashboard/auth route exists yet, so the CTA shows
-    // an honest placeholder instead of linking to a fake page.
-    // Set this to a real path (e.g. "/dashboard") once that route exists.
+    // When unset, the CTA opens the auth modal (see CtaButton). Point this at
+    // a dedicated route instead if the flow ever moves to its own page.
     href: null as string | null,
   },
 } as const;
