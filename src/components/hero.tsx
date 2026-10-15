@@ -7,36 +7,57 @@ export function Hero() {
     <section className="relative isolate overflow-hidden px-6 pt-16 pb-20 sm:pt-24 md:pb-28">
       <div
         aria-hidden="true"
-        className="bg-grid pointer-events-none absolute inset-0 -z-10 opacity-[0.35] [mask-image:radial-gradient(ellipse_at_top,black,transparent_72%)]"
+        className="bg-aurora pointer-events-none absolute inset-x-0 top-0 -z-20 h-[36rem]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[-12rem] -z-10 mx-auto h-96 w-[42rem] max-w-full rounded-full bg-accent/10 blur-3xl"
+        className="dot-grid pointer-events-none absolute inset-0 -z-10 opacity-50 [mask-image:radial-gradient(ellipse_65%_55%_at_50%_0%,black,transparent_78%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-float pointer-events-none absolute left-[6%] top-24 -z-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-float-slow pointer-events-none absolute right-[8%] top-16 -z-10 h-52 w-52 rounded-full bg-accent/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-breathe pointer-events-none absolute left-1/2 top-[-8rem] -z-10 h-80 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
       />
 
-      <div className="reveal mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <Image
           src="/edgefolio-logo.png"
           alt="Edgefolio"
           width={832}
           height={192}
           priority
-          className="h-9 w-auto sm:h-11"
+          className="reveal h-9 w-auto drop-shadow-[0_0_24px_rgba(200,255,61,0.35)] sm:h-11"
         />
 
-        <p className="mt-10 text-xs font-semibold tracking-[0.28em] text-accent sm:text-sm">
+        <p
+          className="reveal mt-10 text-xs font-semibold tracking-[0.28em] text-accent sm:text-sm"
+          style={{ animationDelay: "90ms" }}
+        >
           {siteConfig.eyebrow}
         </p>
 
-        <h1 className="mt-5 max-w-3xl text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+        <h1
+          className="text-gradient reveal mt-5 max-w-3xl text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
+          style={{ animationDelay: "170ms" }}
+        >
           {siteConfig.headline}
         </h1>
 
-        <p className="mt-6 max-w-xl text-pretty text-lg leading-8 text-muted">
+        <p
+          className="reveal mt-6 max-w-xl text-pretty text-lg leading-8 text-muted"
+          style={{ animationDelay: "250ms" }}
+        >
           {siteConfig.description}
         </p>
 
-        <div className="mt-10">
+        <div className="reveal mt-10" style={{ animationDelay: "330ms" }}>
           <CtaButton />
         </div>
       </div>

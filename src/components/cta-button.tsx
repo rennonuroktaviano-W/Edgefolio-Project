@@ -4,14 +4,18 @@ import { useState } from "react";
 import { siteConfig } from "@/config/site";
 
 const ctaClasses =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-night transition-colors duration-200 hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:bg-accent-strong";
+  "btn-cta inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-night transition-colors duration-200 hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:bg-accent-strong";
+
+function Shine() {
+  return <span aria-hidden="true" className="btn-shine" />;
+}
 
 function ArrowIcon() {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 16 16"
-      className="h-4 w-4"
+      className="btn-arrow h-4 w-4"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.75"
@@ -30,6 +34,7 @@ export function CtaButton() {
   if (siteConfig.cta.href) {
     return (
       <a href={siteConfig.cta.href} className={ctaClasses}>
+        <Shine />
         {siteConfig.cta.label}
         <ArrowIcon />
       </a>
@@ -44,6 +49,7 @@ export function CtaButton() {
         aria-describedby="cta-notice"
         onClick={() => setNotice(true)}
       >
+        <Shine />
         {siteConfig.cta.label}
         <ArrowIcon />
       </button>

@@ -1,18 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night: #080b0a;
-  --color-surface: #101513;
-  --color-surface-raised: #151b18;
-  --color-ink: #f4f7f5;
-  --color-muted: #a0aaa4;
-  --color-accent: #16c784;
-  --color-accent-strong: #0fb874;
-  --color-hairline: rgba(255, 255, 255, 0.08);
-  --color-hairline-strong: rgba(255, 255, 255, 0.14);
+  /* Surfaces */
+  --color-night: #10120f;
+  --color-surface: #141a16;
+  --color-surface-raised: #1a211b;
+  --color-surface-strong: #202820;
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Text */
+  --color-ink: #f4f5ef;
+  --color-muted: #a0a69a;
+  --color-faint: #70786d;
+
+  /* Brand accent — electric lime */
+  --color-accent: #c8ff3d;
+  --color-accent-strong: #b5ed2e;
+  --color-accent-alt: #a99aff;
+
+  /* Trading status */
+  --color-positive: #42d392;
+  --color-negative: #ff646e;
+  --color-warning: #f5bd4f;
+  --color-info: #75b8ff;
+
+  /* Borders */
+  --color-hairline: #293229;
+  --color-hairline-strong: #364136;
+
+  --animate-float: edgefolio-float 10s ease-in-out infinite;
+  --animate-float-slow: edgefolio-float 16s ease-in-out infinite;
+  --animate-breathe: edgefolio-breathe 7s ease-in-out infinite;
+  --animate-aurora: edgefolio-aurora 18s ease-in-out infinite alternate;
+  --animate-blink: edgefolio-blink 5s ease-in-out infinite;
+  --animate-pan: edgefolio-pan 9s linear infinite;
+  --animate-dot: edgefolio-dot 2.6s ease-in-out infinite;
+  --animate-cta: edgefolio-cta 3.6s ease-in-out infinite;
 }
 
 :root {
@@ -29,6 +51,11 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-ink);
 }
 
 :focus-visible {
@@ -52,17 +79,237 @@ body {
   }
 }
 
-/* Faint chart grid used behind the hero. */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-hairline) 1px, transparent 1px);
-  background-size: 64px 64px;
+/* ------------------------------------------------------------------ *
+ * Ambient background — soft glows that let sections bleed into each
+ * other with no hard divider lines anywhere on the page.
+ * ------------------------------------------------------------------ */
+.bg-ambient {
+  background:
+    radial-gradient(
+      62rem 42rem at 50% -12%,
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      48rem 40rem at 108% 8%,
+      color-mix(in srgb, var(--color-accent) 7%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      52rem 44rem at -8% 100%,
+      color-mix(in srgb, var(--color-accent) 6%, transparent),
+      transparent 62%
+    );
 }
 
-/* Subtle entrance animation for above-the-fold content. */
+.bg-aurora {
+  background:
+    radial-gradient(
+      40rem 26rem at 18% 8%,
+      color-mix(in srgb, var(--color-accent) 20%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      34rem 26rem at 86% 4%,
+      color-mix(in srgb, var(--color-accent) 13%, transparent),
+      transparent 62%
+    );
+  animation: var(--animate-aurora), var(--animate-blink);
+  will-change: transform, opacity;
+}
+
+/* Faint dot texture instead of hard chart lines. */
+.dot-grid {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-ink) 22%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+}
+
+/* Animated gradient headline. */
+.text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-ink) 0%,
+    var(--color-ink) 38%,
+    var(--color-accent) 50%,
+    var(--color-ink) 62%,
+    var(--color-ink) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: var(--animate-pan);
+}
+
+/* Gradient hairline frame — replaces solid borders on cards and the
+ * mockup window. */
+.soft-frame {
+  position: relative;
+}
+
+.soft-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-ink) 14%, transparent),
+    color-mix(in srgb, var(--color-ink) 3%, transparent) 45%,
+    transparent
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.soft-frame-accent::before {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--color-accent) 45%, transparent),
+    color-mix(in srgb, var(--color-ink) 6%, transparent) 40%,
+    transparent
+  );
+}
+
+/* Mockup window with an outer glow instead of a hard 1px border. */
+.mockup-frame {
+  position: relative;
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-accent) 5%, transparent),
+      transparent 26%
+    ),
+    var(--color-surface);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-ink) 6%, transparent),
+    0 40px 120px -48px color-mix(in srgb, var(--color-accent) 45%, transparent),
+    0 30px 90px -40px rgba(0, 0, 0, 0.85);
+}
+
+/* Cursor-following spotlight glow. */
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    340px circle at var(--x, 50%) var(--y, 0%),
+    color-mix(in srgb, var(--color-accent) 14%, transparent),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.spotlight:hover::after {
+  opacity: 1;
+}
+
+/* Scroll-triggered reveal. Falls back to visible when JS is off. */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Entrance animation for above-the-fold content. */
 .reveal {
-  animation: edgefolio-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: edgefolio-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Equity curve "draws" itself once its section is revealed. */
+.equity-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.is-visible .equity-line {
+  animation: edgefolio-draw 1.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+
+.equity-area {
+  opacity: 0;
+}
+
+.is-visible .equity-area {
+  animation: edgefolio-fade 0.9s ease 0.9s forwards;
+}
+
+.equity-dot {
+  opacity: 0;
+}
+
+.is-visible .equity-dot {
+  animation:
+    edgefolio-fade 0.5s ease 1.7s forwards,
+    var(--animate-dot);
+}
+
+/* Risk bars grow from their baseline once the section is revealed. */
+.chart-bar {
+  transform-box: fill-box;
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+.is-visible .chart-bar {
+  animation: edgefolio-bar 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* CTA: pulsing glow + shine sweep + arrow nudge. */
+.btn-cta {
+  position: relative;
+  overflow: hidden;
+  animation: var(--animate-cta);
+}
+
+.btn-shine {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-130%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.38),
+    transparent
+  );
+  transition: transform 0.75s ease;
+  pointer-events: none;
+}
+
+.btn-cta:hover .btn-shine,
+.btn-cta:focus-visible .btn-shine {
+  transform: translateX(130%);
+}
+
+.btn-arrow {
+  transition: transform 0.2s ease;
+}
+
+.btn-cta:hover .btn-arrow,
+.btn-cta:focus-visible .btn-arrow {
+  transform: translateX(3px);
 }
 
 @keyframes edgefolio-reveal {
@@ -73,5 +320,96 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes edgefolio-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes edgefolio-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes edgefolio-bar {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes edgefolio-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(8px, -16px, 0);
+  }
+}
+
+@keyframes edgefolio-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes edgefolio-aurora {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-4%, 3%, 0) scale(1.08);
+  }
+}
+
+@keyframes edgefolio-blink {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes edgefolio-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes edgefolio-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.72);
+  }
+}
+
+@keyframes edgefolio-cta {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 34%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 28px 2px
+      color-mix(in srgb, var(--color-accent) 42%, transparent);
   }
 }
