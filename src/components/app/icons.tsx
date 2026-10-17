@@ -227,3 +227,38 @@ export function BookmarkIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function ShareIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M10 3.25v9" />
+      <path d="m6.75 6.5 3.25-3.25L13.25 6.5" />
+      <path d="M5 10.5v4.75h10V10.5" />
+    </svg>
+  );
+}
+
+export function FlameIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M10 3.25c2.5 2.4 3.75 4.7 3.75 6.75a3.75 3.75 0 0 1-7.5 0c0-1.1.4-2.1 1.1-3.05.35.9.9 1.5 1.65 1.8-.35-2 .3-3.85 1-5.5z" />
+    </svg>
+  );
+}
+
+export function StarIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="m10 3.25 1.95 3.95 4.35.63-3.15 3.07.74 4.33L10 13.2l-3.89 2.03.74-4.33L3.7 7.83l4.35-.63z" />
+    </svg>
+  );
+}
+
+export function ClockIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <circle cx="10" cy="10" r="6.75" />
+      <path d="M10 6.5V10l2.5 1.5" />
+    </svg>
+  );
+}

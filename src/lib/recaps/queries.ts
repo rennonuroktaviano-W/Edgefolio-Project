@@ -97,6 +97,38 @@ async function engagementFor(
   return result;
 }
 
+async function hydrateRecaps(
+  rows: EntryRow[],
+  viewerId: string | null,
+): Promise<Recap[]> {
+  const [attachments, engagement] = await Promise.all([
+    attachmentsFor(rows.map((row) => row.id)),
+    engagementFor(
+      rows.map((row) => row.id),
+      viewerId,
+    ),
+  ]);
+
+  return rows.map((row) => {
+    const counts = engagement.get(row.id);
+    return {
+      ...toJournalEntry(row, attachments.get(row.id) ?? []),
+      likeCount: counts?.likes ?? 0,
+      savedCount: counts?.saves ?? 0,
+      commentCount: counts?.comments ?? 0,
+      likedByMe: counts?.likedByMe ?? false,
+      savedByMe: counts?.savedByMe ?? false,
+      isMine: viewerId ? row.user_id === viewerId : false,
+    };
+  });
+}
+
+// Engagement score weights comments and saves higher than likes. It only ever
+// uses real engagement counts; nothing here is estimated.
+export function engagementScore(recap: Recap): number {
+  return recap.likeCount * 2 + recap.commentCount * 3 + recap.savedCount * 2;
+}
+
 export type FeedSort = "foryou" | "latest";
 
 export async function listRecaps(sort: FeedSort = "latest"): Promise<Recap[]> {
@@ -115,39 +147,167 @@ export async function listRecaps(sort: FeedSort = "latest"): Promise<Recap[]> {
 
   if (error || !data) return [];
 
-  const rows = data as EntryRow[];
-  const [attachments, engagement] = await Promise.all([
-    attachmentsFor(rows.map((row) => row.id)),
-    engagementFor(
-      rows.map((row) => row.id),
-      viewerId,
-    ),
-  ]);
-
-  const recaps: Recap[] = rows.map((row) => {
-    const entry = toJournalEntry(row, attachments.get(row.id) ?? []);
-    const counts = engagement.get(row.id);
-    return {
-      ...entry,
-      likeCount: counts?.likes ?? 0,
-      savedCount: counts?.saves ?? 0,
-      commentCount: counts?.comments ?? 0,
-      likedByMe: counts?.likedByMe ?? false,
-      savedByMe: counts?.savedByMe ?? false,
-      isMine: viewerId ? row.user_id === viewerId : false,
-    } as Recap & { user_id?: string };
-  });
+  const recaps = await hydrateRecaps(data as EntryRow[], viewerId);
 
   if (sort === "foryou") {
     recaps.sort((a, b) => {
-      const scoreA = a.likeCount * 2 + a.commentCount * 3 + a.savedCount * 2;
-      const scoreB = b.likeCount * 2 + b.commentCount * 3 + b.savedCount * 2;
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      return b.createdAt < a.createdAt ? -1 : 1;
+      const diff = engagementScore(b) - engagementScore(a);
+      if (diff !== 0) return diff;
+      return a.createdAt < b.createdAt ? 1 : -1;
     });
   }
 
   return recaps;
+}
+
+// ---------------------------------------------------------------------------
+// Explore feed: paginated, filterable public recaps.
+// ---------------------------------------------------------------------------
+
+export type ExploreSort = "latest" | "discussed";
+
+// Engagement totals live in side tables, so a true DB-side "most discussed"
+// sort would need an RPC/view. At the current scale we pull a bounded window
+// and sort by real engagement in memory. Swapping in an RPC later is transparent
+// to callers.
+const DISCUSSED_WINDOW = 200;
+
+export const EXPLORE_DEFAULT_LIMIT = 6;
+
+export type ExploreFeedQuery = {
+  sort?: ExploreSort;
+  symbol?: string | null;
+  offset?: number;
+  limit?: number;
+};
+
+export type ExploreFeedPage = {
+  recaps: Recap[];
+  hasMore: boolean;
+};
+
+export async function listRecapsPage({
+  sort = "latest",
+  symbol = null,
+  offset = 0,
+  limit = EXPLORE_DEFAULT_LIMIT,
+}: ExploreFeedQuery = {}): Promise<ExploreFeedPage> {
+  await io();
+  const supabase = await createClient();
+  if (!supabase) return { recaps: [], hasMore: false };
+
+  const viewerId = await currentUserId();
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 24);
+  const safeOffset = Math.max(Math.trunc(offset), 0);
+  const filter = symbol?.trim() || null;
+
+  if (sort === "discussed") {
+    let windowQuery = supabase
+      .from("journal_entries")
+      .select("*")
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(DISCUSSED_WINDOW);
+    if (filter) windowQuery = windowQuery.eq("symbol", filter);
+
+    const { data, error } = await windowQuery;
+    if (error || !data) return { recaps: [], hasMore: false };
+
+    const hydrated = await hydrateRecaps(data as EntryRow[], viewerId);
+    hydrated.sort((a, b) => {
+      const diff = engagementScore(b) - engagementScore(a);
+      if (diff !== 0) return diff;
+      return a.createdAt < b.createdAt ? 1 : -1;
+    });
+
+    return {
+      recaps: hydrated.slice(safeOffset, safeOffset + safeLimit),
+      hasMore: safeOffset + safeLimit < hydrated.length,
+    };
+  }
+
+  let query = supabase
+    .from("journal_entries")
+    .select("*")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false })
+    // Fetch one extra row to detect whether another page exists.
+    .range(safeOffset, safeOffset + safeLimit);
+  if (filter) query = query.eq("symbol", filter);
+
+  const { data, error } = await query;
+  if (error || !data) return { recaps: [], hasMore: false };
+
+  const rows = (data as EntryRow[]).slice(0, safeLimit);
+  return {
+    recaps: await hydrateRecaps(rows, viewerId),
+    hasMore: data.length > safeLimit,
+  };
+}
+
+export type TrendingSymbol = { symbol: string; count: number };
+
+// Trending topics are derived from what traders actually publish: the symbols
+// shared most often in public recaps. No engagement is invented.
+export async function topSymbols(limit = 8): Promise<TrendingSymbol[]> {
+  await io();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .select("symbol")
+    .eq("visibility", "public")
+    .not("symbol", "is", null)
+    .limit(1000);
+
+  if (error || !data) return [];
+
+  const counts = new Map<string, number>();
+  for (const row of data as { symbol: string | null }[]) {
+    const symbol = row.symbol?.trim();
+    if (!symbol) continue;
+    counts.set(symbol, (counts.get(symbol) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([symbol, count]) => ({ symbol, count }))
+    .sort((a, b) => b.count - a.count || a.symbol.localeCompare(b.symbol))
+    .slice(0, Math.max(limit, 1));
+}
+
+// The featured recap is a real public recap that reported a result, chosen by
+// real engagement. Returns null when nothing qualifies so the UI can show an
+// honest empty state instead of an example.
+export async function featuredRecap(): Promise<Recap | null> {
+  await io();
+  const supabase = await createClient();
+  if (!supabase) return null;
+
+  const viewerId = await currentUserId();
+
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .select("*")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (error || !data) return null;
+
+  const hydrated = await hydrateRecaps(data as EntryRow[], viewerId);
+  const withResult = hydrated.filter(
+    (recap) => recap.resultR !== null || recap.outcome !== null,
+  );
+  if (withResult.length === 0) return null;
+
+  withResult.sort((a, b) => {
+    const diff = engagementScore(b) - engagementScore(a);
+    if (diff !== 0) return diff;
+    return a.createdAt < b.createdAt ? 1 : -1;
+  });
+
+  return withResult[0];
 }
 
 export async function getRecap(id: string): Promise<Recap | null> {
@@ -392,4 +552,11 @@ export async function getLeaderboard(
   });
 
   return rows.sort((a, b) => b.totalR - a.totalR);
+}
+
+// Traders to discover, derived from the same public data as the leaderboard:
+// only published results. No followers, balances, or badges are invented.
+export async function discoverTraders(limit = 6): Promise<LeaderboardRow[]> {
+  const rows = await getLeaderboard("all");
+  return rows.slice(0, Math.max(limit, 1));
 }
