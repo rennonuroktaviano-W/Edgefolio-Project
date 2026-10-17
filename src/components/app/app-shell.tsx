@@ -8,7 +8,6 @@ import { Logo } from "@/components/logo";
 import { SidebarCollapseContext } from "@/components/app/sidebar-context";
 import { markAppSession } from "@/lib/auth/app-session";
 import {
-  AccountIcon,
   AnalyticsIcon,
   CalendarIcon,
   CloseIcon,
@@ -32,10 +31,6 @@ const PRIMARY_NAV: NavItem[] = [
   { label: "Calendar", href: "/calendar", Icon: CalendarIcon, soon: true },
   { label: "Analytics", href: "/analytics", Icon: AnalyticsIcon, soon: true },
   { label: "Risk", href: "/risk", Icon: ShieldIcon, soon: true },
-];
-
-const SECONDARY_NAV: NavItem[] = [
-  { label: "Account", href: "/account", Icon: AccountIcon },
 ];
 
 const COLLAPSE_STORAGE_KEY = "edgefolio:sidebar-collapsed";
@@ -172,20 +167,6 @@ function SidebarContent({
       >
         <ul className="space-y-1">
           {PRIMARY_NAV.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              collapsed={collapsed}
-              pathname={pathname}
-              onNavigate={onNavigate}
-            />
-          ))}
-        </ul>
-
-        <div className="my-3 h-px bg-hairline" aria-hidden="true" />
-
-        <ul className="space-y-1">
-          {SECONDARY_NAV.map((item) => (
             <NavLink
               key={item.href}
               item={item}

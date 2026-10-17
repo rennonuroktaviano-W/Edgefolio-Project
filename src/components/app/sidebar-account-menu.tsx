@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthModal } from "@/components/auth/auth-provider";
 import { useSidebarCollapsed } from "@/components/app/sidebar-context";
@@ -116,14 +115,6 @@ export function SidebarAccountMenu({ user }: SidebarAccountMenuProps) {
           {user.email ? (
             <p className="truncate px-3 py-2 text-xs text-faint">{user.email}</p>
           ) : null}
-          <Link
-            href="/account"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-strong hover:text-ink"
-          >
-            Account settings
-          </Link>
           <button
             type="button"
             role="menuitem"

@@ -87,14 +87,6 @@ export function UserMenu({ username, email }: UserMenuProps) {
           >
             Dashboard
           </Link>
-          <Link
-            href="/account"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-strong hover:text-ink"
-          >
-            Account
-          </Link>
           <button
             type="button"
             role="menuitem"
