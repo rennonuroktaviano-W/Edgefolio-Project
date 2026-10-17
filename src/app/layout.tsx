@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { AccountChip } from "@/components/auth/account-chip";
+import { AccountChipGate } from "@/components/auth/account-chip-gate";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <style>{`.reveal-up{opacity:1 !important;transform:none !important}`}</style>
         </noscript>
         <AuthProvider>
-          <AccountChip />
+          <AccountChipGate>
+            <AccountChip />
+          </AccountChipGate>
           {children}
         </AuthProvider>
       </body>
