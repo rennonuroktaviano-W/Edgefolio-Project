@@ -54,7 +54,7 @@ export function CommunityView({ recaps }: { recaps: Recap[] }) {
     <div className="space-y-6">
       <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
         <SearchField
-          label=""
+          label="Search recaps"
           placeholder="Search recaps by symbol, title, or trader"
           value={query}
           onChange={setQuery}
