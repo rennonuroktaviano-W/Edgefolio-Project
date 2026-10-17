@@ -12,7 +12,8 @@ import {
 } from "@/components/app/icons";
 import { Message } from "@/components/auth/auth-fields";
 import type { Recap, RecapComment } from "@/lib/journal/types";
-import { formatPrice, formatR, formatRelativeTime } from "@/lib/trading/format";
+import { formatPrice, formatR } from "@/lib/trading/format";
+import { RelativeTime } from "@/components/app/relative-time";
 
 function initials(recap: Recap): string {
   const source = recap.authorDisplayName ?? recap.authorUsername ?? "?";
@@ -141,7 +142,7 @@ export function RecapCard({
           )}
           <p className="text-xs text-faint">
             {recap.authorUsername ? `@${recap.authorUsername} · ` : ""}
-            {formatRelativeTime(recap.createdAt)}
+            <RelativeTime value={recap.createdAt} />
           </p>
         </div>
         {recap.isMine ? <Badge tone="accent">You</Badge> : null}
@@ -278,8 +279,8 @@ export function RecapCard({
                       {comment.authorDisplayName ??
                         (comment.authorUsername
                           ? `@${comment.authorUsername}`
-                          : "Trader")}{" "}
-                      · {formatRelativeTime(comment.createdAt)}
+                          : "Trader"                      )}{" "}
+                      · <RelativeTime value={comment.createdAt} />
                     </p>
                     <p className="mt-0.5 whitespace-pre-wrap text-sm text-muted">
                       {comment.body}

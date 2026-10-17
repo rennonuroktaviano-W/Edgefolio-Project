@@ -1,5 +1,6 @@
 import "server-only";
 
+import { io } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
@@ -143,6 +144,7 @@ export async function attachmentsFor(
   const result = new Map<string, JournalAttachment[]>();
   if (entryIds.length === 0) return result;
 
+  await io();
   const supabase = await createClient();
   if (!supabase) return result;
 
@@ -170,6 +172,7 @@ export async function attachmentsFor(
 }
 
 export async function listJournalEntries(): Promise<JournalEntry[]> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 
@@ -188,6 +191,7 @@ export async function listJournalEntries(): Promise<JournalEntry[]> {
 }
 
 export async function getJournalEntry(id: string): Promise<JournalEntry | null> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return null;
 

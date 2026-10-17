@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -67,25 +67,12 @@ const NAV_GROUPS: NavGroup[] = [
 const COLLAPSE_STORAGE_KEY = "edgefolio:sidebar-collapsed";
 const COLLAPSE_EVENT = "edgefolio:sidebar-collapsed-change";
 
-function subscribeCollapse(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener(COLLAPSE_EVENT, callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(COLLAPSE_EVENT, callback);
-  };
-}
-
 function getCollapseSnapshot() {
   try {
     return window.localStorage.getItem(COLLAPSE_STORAGE_KEY) === "true";
   } catch {
     return false;
   }
-}
-
-function getCollapseServerSnapshot() {
-  return false;
 }
 
 function NavLink({
@@ -224,11 +211,29 @@ type AppShellProps = {
 
 export function AppShell({ children, account }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const collapsed = useSyncExternalStore(
-    subscribeCollapse,
-    getCollapseSnapshot,
-    getCollapseServerSnapshot,
-  );
+  // Default to expanded for the server render and the first client render so the
+  // markup matches on hydration; the persisted preference is applied after mount.
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    // Hydration-safe sync of a persisted UI preference: the server and the first
+    // client render both use the expanded default, then we read the external
+    // store (localStorage) once after mount. Reading it during render would make
+    // the client markup diverge from the server HTML.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCollapsed(getCollapseSnapshot());
+
+    function onChange() {
+      setCollapsed(getCollapseSnapshot());
+    }
+
+    window.addEventListener("storage", onChange);
+    window.addEventListener(COLLAPSE_EVENT, onChange);
+    return () => {
+      window.removeEventListener("storage", onChange);
+      window.removeEventListener(COLLAPSE_EVENT, onChange);
+    };
+  }, []);
 
   useEffect(() => {
     markAppSession();

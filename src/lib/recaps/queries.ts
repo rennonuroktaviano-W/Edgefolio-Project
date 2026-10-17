@@ -1,5 +1,6 @@
 import "server-only";
 
+import { io } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { attachmentsFor, toJournalEntry } from "@/lib/journal/queries";
 import type { Recap, RecapComment } from "@/lib/journal/types";
@@ -99,6 +100,7 @@ async function engagementFor(
 export type FeedSort = "foryou" | "latest";
 
 export async function listRecaps(sort: FeedSort = "latest"): Promise<Recap[]> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 
@@ -149,6 +151,7 @@ export async function listRecaps(sort: FeedSort = "latest"): Promise<Recap[]> {
 }
 
 export async function getRecap(id: string): Promise<Recap | null> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return null;
 
@@ -182,6 +185,7 @@ export async function getRecap(id: string): Promise<Recap | null> {
 }
 
 export async function listComments(entryId: string): Promise<RecapComment[]> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 
@@ -206,6 +210,7 @@ export async function listComments(entryId: string): Promise<RecapComment[]> {
 }
 
 export async function listSavedRecaps(): Promise<Recap[]> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 
@@ -260,6 +265,7 @@ export async function listSavedRecaps(): Promise<Recap[]> {
 export async function listPublicRecapsByAuthor(
   username: string,
 ): Promise<{ recaps: Recap[]; displayName: string | null }> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return { recaps: [], displayName: null };
 
@@ -320,6 +326,7 @@ export type LeaderboardPeriod = "all" | "month" | "week";
 export async function getLeaderboard(
   period: LeaderboardPeriod = "all",
 ): Promise<LeaderboardRow[]> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 

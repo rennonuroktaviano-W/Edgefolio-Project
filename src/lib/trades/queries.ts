@@ -1,5 +1,6 @@
 import "server-only";
 
+import { io } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Trade, TradeInput } from "@/lib/trades/types";
@@ -55,6 +56,10 @@ export async function getSupabase(): Promise<SupabaseClient | null> {
 }
 
 export async function listTrades(): Promise<Trade[]> {
+  // Mark the dynamic boundary before Supabase reads the session: the library's
+  // internal token-expiry `Date.now()` check must run at request time, not while
+  // prerendering the static shell (required with cacheComponents enabled).
+  await io();
   const supabase = await createClient();
   if (!supabase) return [];
 
@@ -68,6 +73,7 @@ export async function listTrades(): Promise<Trade[]> {
 }
 
 export async function getTrade(id: string): Promise<Trade | null> {
+  await io();
   const supabase = await createClient();
   if (!supabase) return null;
 

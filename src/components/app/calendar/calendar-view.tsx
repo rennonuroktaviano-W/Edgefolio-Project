@@ -28,10 +28,19 @@ function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-export function CalendarView({ trades }: { trades: Trade[] }) {
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
+export function CalendarView({
+  trades,
+  initialYear,
+  initialMonth,
+  todayIso,
+}: {
+  trades: Trade[];
+  initialYear: number;
+  initialMonth: number;
+  todayIso: string;
+}) {
+  const [year, setYear] = useState(initialYear);
+  const [month, setMonth] = useState(initialMonth);
 
   const daily = useMemo(() => {
     const map = new Map<string, { netPnl: number; count: number }>();
@@ -133,10 +142,7 @@ export function CalendarView({ trades }: { trades: Trade[] }) {
             }
             const key = `${monthPrefix}-${pad(day)}`;
             const bucket = daily.get(key);
-            const isToday =
-              day === today.getDate() &&
-              month === today.getMonth() &&
-              year === today.getFullYear();
+            const isToday = key === todayIso;
 
             return (
               <div

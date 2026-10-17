@@ -11,7 +11,19 @@ export const metadata = {
 
 async function CalendarData() {
   const trades = await listTrades();
-  return <CalendarView trades={trades} />;
+  const now = new Date();
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(now.getDate()).padStart(2, "0")}`;
+  return (
+    <CalendarView
+      trades={trades}
+      initialYear={now.getFullYear()}
+      initialMonth={now.getMonth()}
+      todayIso={todayIso}
+    />
+  );
 }
 
 export default function CalendarPage() {
