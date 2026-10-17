@@ -16,8 +16,6 @@ import {
 
 export type AuthMode = "signin" | "signup" | "reset";
 
-const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
-
 const COPY: Record<AuthMode, { title: string; subtitle: string }> = {
   signin: {
     title: "Welcome back",
@@ -25,7 +23,7 @@ const COPY: Record<AuthMode, { title: string; subtitle: string }> = {
   },
   signup: {
     title: "Create your account",
-    subtitle: "Start tracking your trades with Edgefolio.",
+    subtitle: "Set up your account — you'll pick a username next.",
   },
   reset: {
     title: "Reset your password",
@@ -51,16 +49,11 @@ export function AuthModal({
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
   const [notice, setNotice] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<{
-    forUsername: string;
-    available: boolean | null;
-  } | null>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -93,44 +86,6 @@ export function AuthModal({
       previouslyFocused?.focus();
     };
   }, []);
-
-  useEffect(() => {
-    if (mode !== "signup") {
-      return;
-    }
-
-    const candidate = username.trim().toLowerCase();
-    if (!USERNAME_PATTERN.test(candidate)) {
-      return;
-    }
-
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/username-available?username=${encodeURIComponent(candidate)}`,
-        );
-        const result = (await response.json()) as {
-          available?: boolean | null;
-        };
-        if (!cancelled) {
-          setAvailability({
-            forUsername: candidate,
-            available: result.available ?? null,
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setAvailability({ forUsername: candidate, available: null });
-        }
-      }
-    }, 420);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [username, mode]);
 
   function switchMode(next: AuthMode) {
     setMode(next);
@@ -179,7 +134,7 @@ export function AuthModal({
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, username, displayName }),
+        body: JSON.stringify({ email, password, displayName }),
       });
       const result = (await response.json()) as {
         ok?: boolean;
@@ -248,33 +203,6 @@ export function AuthModal({
       setLoading(false);
     }
   }
-
-  const usernameCandidate = username.trim().toLowerCase();
-  const usernameValid = USERNAME_PATTERN.test(usernameCandidate);
-  const usernameHint = (() => {
-    if (!usernameValid) {
-      return {
-        text: "3–24 characters: lowercase letters, numbers, underscore.",
-        className: "text-faint",
-      };
-    }
-    if (availability && availability.forUsername === usernameCandidate) {
-      if (availability.available === true) {
-        return { text: "Username is available.", className: "text-positive" };
-      }
-      if (availability.available === false) {
-        return {
-          text: "Username is already taken.",
-          className: "text-negative",
-        };
-      }
-      return {
-        text: "Availability will be confirmed when you submit.",
-        className: "text-faint",
-      };
-    }
-    return { text: "Checking availability…", className: "text-faint" };
-  })();
 
   const copy = COPY[mode];
   const showTabs = mode !== "reset";
@@ -456,19 +384,6 @@ export function AuthModal({
                 autoComplete="name"
                 icon={<UserIcon />}
                 placeholder="Alex Trader"
-              />
-
-              <TextField
-                id="auth-username"
-                label="Username"
-                value={username}
-                onChange={setUsername}
-                autoComplete="username"
-                required
-                icon={<UserIcon />}
-                placeholder="trader_01"
-                hint={usernameHint.text}
-                hintClassName={usernameHint.className}
               />
 
               <TextField
