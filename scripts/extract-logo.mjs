@@ -4,7 +4,7 @@
 // Pipeline: gradient-flood background removal -> connected-component cleanup ->
 // dark-fringe defringe -> outward color bleed -> feathered (anti-aliased) alpha.
 // Usage: node scripts/extract-logo.mjs
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
 import sharp from "sharp";
 
 const SHEET = "Etalase Logo Edgefolio Neon Hijau.png";
