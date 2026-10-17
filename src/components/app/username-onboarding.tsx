@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth/dal";
-import { UsernameForm } from "@/components/app/username-form";
+import { UsernameGate } from "@/components/app/username-gate";
 
-// Server component: renders the one-time username picker until the signed-in
+// Server component: renders the blocking username gate until the signed-in
 // user has claimed a username. Callers must render it behind a <Suspense>
 // boundary because getCurrentUser reads cookies (cacheComponents enabled).
 export async function UsernameOnboarding() {
@@ -11,5 +11,5 @@ export async function UsernameOnboarding() {
     return null;
   }
 
-  return <UsernameForm />;
+  return <UsernameGate />;
 }

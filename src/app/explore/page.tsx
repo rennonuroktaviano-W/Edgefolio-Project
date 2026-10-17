@@ -1,6 +1,4 @@
-import { Suspense } from "react";
 import { ExploreDashboard } from "@/components/app/explore-dashboard";
-import { UsernameOnboarding } from "@/components/app/username-onboarding";
 
 export const metadata = {
   title: "Explore — Edgefolio",
@@ -11,10 +9,6 @@ export const metadata = {
 export default function ExplorePage() {
   return (
     <>
-      <Suspense fallback={null}>
-        <UsernameOnboarding />
-      </Suspense>
-
       <header className="reveal">
         <p className="text-xs font-semibold tracking-[0.28em] text-accent">
           EXPLORE

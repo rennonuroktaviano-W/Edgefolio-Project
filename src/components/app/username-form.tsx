@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Ref } from "react";
 import { useRouter } from "next/navigation";
 import {
   AuthSubmitButton,
@@ -11,7 +12,7 @@ import {
 
 const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
 
-export function UsernameForm() {
+export function UsernameForm({ panelRef }: { panelRef?: Ref<HTMLElement> }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
@@ -119,7 +120,10 @@ export function UsernameForm() {
   }
 
   return (
-    <section className="soft-frame reveal mb-8 rounded-2xl border border-accent/30 bg-surface-raised p-5 sm:p-6">
+    <section
+      ref={panelRef}
+      className="soft-frame rounded-2xl border border-accent/30 bg-surface-raised p-5 sm:p-6"
+    >
       <p className="text-xs font-semibold tracking-[0.28em] text-accent">
         ONE MORE STEP
       </p>

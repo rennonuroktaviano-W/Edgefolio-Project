@@ -240,6 +240,13 @@ body {
   animation: edgefolio-msg 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Username gate: draws attention when the user tries to interact elsewhere. */
+.onboarding-attention {
+  animation:
+    edgefolio-glow 0.9s ease,
+    edgefolio-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
 /* Hide the scrollbar while keeping the area scrollable. */
 .scrollbar-none {
   scrollbar-width: none;
@@ -444,5 +451,38 @@ body {
   50% {
     box-shadow: 0 0 28px 2px
       color-mix(in srgb, var(--color-accent) 42%, transparent);
+  }
+}
+
+@keyframes edgefolio-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--color-accent) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+  45% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--color-accent) 34%, transparent),
+      0 0 44px 6px color-mix(in srgb, var(--color-accent) 40%, transparent);
+  }
+}
+
+@keyframes edgefolio-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(3px);
   }
 }
