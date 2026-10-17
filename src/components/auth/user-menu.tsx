@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { clearAppSession } from "@/lib/auth/app-session";
 
 type UserMenuProps = {
   username: string | null;
@@ -46,6 +47,7 @@ export function UserMenu({ username, email }: UserMenuProps) {
     setSigningOut(true);
     try {
       await fetch("/api/auth/signout", { method: "POST" });
+      clearAppSession();
       setOpen(false);
       router.refresh();
       router.push("/");
@@ -77,6 +79,14 @@ export function UserMenu({ username, email }: UserMenuProps) {
           {email ? (
             <p className="truncate px-3 py-2 text-xs text-faint">{email}</p>
           ) : null}
+          <Link
+            href="/explore"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-strong hover:text-ink"
+          >
+            Dashboard
+          </Link>
           <Link
             href="/account"
             role="menuitem"

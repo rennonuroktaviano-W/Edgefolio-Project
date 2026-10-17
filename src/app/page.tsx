@@ -1,3 +1,4 @@
+import { AppSessionRedirect } from "@/components/auth/app-session-redirect";
 import { Hero } from "@/components/hero";
 import { ProductPreview } from "@/components/product-preview";
 import { TradingCalendar } from "@/components/trading-calendar";
@@ -10,6 +11,7 @@ import { SiteFooter } from "@/components/footer";
 export default function Home() {
   return (
     <div className="relative flex min-h-dvh flex-col">
+      <AppSessionRedirect />
       <div
         aria-hidden="true"
         className="bg-ambient pointer-events-none fixed inset-0 -z-50"

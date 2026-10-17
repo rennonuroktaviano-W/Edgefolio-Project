@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { io } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type CurrentUser = {
@@ -20,6 +21,11 @@ type ProfileRow = {
 // Data Access Layer. Callers must render it behind a <Suspense> boundary
 // because it reads cookies (required with cacheComponents enabled).
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  // Suspend prerendering before Supabase reads the session, so the library's
+  // internal token-expiry `Date.now()` check runs at request time instead of
+  // during static shell generation (required with cacheComponents enabled).
+  await io();
+
   const supabase = await createClient();
   if (!supabase) {
     return null;

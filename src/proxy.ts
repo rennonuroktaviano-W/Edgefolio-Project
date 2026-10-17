@@ -34,7 +34,28 @@ export async function proxy(request: NextRequest) {
   });
 
   // Touching getUser() validates the token and writes refreshed cookies.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // The app area requires a session. Bounce anonymous visitors to the landing
+  // with a flag so the client can drop any stale per-tab marker (no redirect
+  // loop).
+  const { pathname } = request.nextUrl;
+  const isAppRoute = pathname === "/explore" || pathname.startsWith("/explore/");
+
+  if (isAppRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    url.searchParams.set("signedout", "1");
+
+    const redirectResponse = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) {
+      redirectResponse.cookies.set(cookie);
+    }
+    return redirectResponse;
+  }
 
   return response;
 }

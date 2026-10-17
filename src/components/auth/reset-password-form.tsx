@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { DEFAULT_AUTH_REDIRECT } from "@/lib/auth/redirect";
+import { markAppSession } from "@/lib/auth/app-session";
 import {
   AuthSubmitButton,
   Message,
@@ -45,9 +47,10 @@ export function ResetPasswordForm() {
         return;
       }
 
-      setNotice("Password updated. Taking you to your account…");
+      setNotice("Password updated. Taking you to your dashboard…");
+      markAppSession();
       router.refresh();
-      router.push("/account");
+      router.replace(DEFAULT_AUTH_REDIRECT);
     } catch {
       setError("Network error. Please try again.");
     } finally {

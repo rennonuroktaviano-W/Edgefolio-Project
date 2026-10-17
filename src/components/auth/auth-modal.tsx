@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/logo";
+import { DEFAULT_AUTH_REDIRECT } from "@/lib/auth/redirect";
+import { markAppSession } from "@/lib/auth/app-session";
 import {
   AuthSubmitButton,
   MailIcon,
@@ -137,23 +138,6 @@ export function AuthModal({
     setNotice(null);
   }
 
-  async function handleGoogle() {
-    const supabase = createClient();
-    if (!supabase) {
-      setError("Authentication is not configured yet.");
-      return;
-    }
-    setError(null);
-    const redirectTo = `${window.location.origin}/auth/callback?next=/account`;
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo },
-    });
-    if (oauthError) {
-      setError("Google sign-in could not be started. Please try again.");
-    }
-  }
-
   async function handleSignIn(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
@@ -176,8 +160,9 @@ export function AuthModal({
       }
 
       onClose();
+      markAppSession();
       router.refresh();
-      router.push("/account");
+      router.replace(DEFAULT_AUTH_REDIRECT);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -215,8 +200,9 @@ export function AuthModal({
       }
 
       onClose();
+      markAppSession();
       router.refresh();
-      router.push("/account");
+      router.replace(DEFAULT_AUTH_REDIRECT);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -399,14 +385,16 @@ export function AuthModal({
         <div className="scrollbar-none relative flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-6 sm:px-8 sm:pb-8">
           {showTabs ? (
             <>
-              <button
-                type="button"
-                onClick={handleGoogle}
+              <a
+                href={`/auth/oauth?provider=google&next=${encodeURIComponent(
+                  DEFAULT_AUTH_REDIRECT,
+                )}`}
+                onClick={markAppSession}
                 className="flex w-full items-center justify-center gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-sm font-medium text-ink transition-colors hover:border-hairline-strong hover:bg-surface-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 <GoogleIcon />
                 Continue with Google
-              </button>
+              </a>
 
               <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-faint">
                 <span className="h-px flex-1 bg-hairline" />

@@ -7,6 +7,13 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
+  const errorCode = searchParams.get("error_code") ?? searchParams.get("error");
+
+  if (errorCode) {
+    return NextResponse.redirect(
+      `${origin}/auth/error?reason=${encodeURIComponent(errorCode)}`,
+    );
+  }
 
   if (code) {
     const supabase = await createClient();

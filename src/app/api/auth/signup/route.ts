@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isRateLimited, clientIp } from "@/lib/auth/rate-limit";
+import { DEFAULT_AUTH_REDIRECT } from "@/lib/auth/redirect";
 import {
   isValidEmail,
   isValidPassword,
@@ -97,7 +98,9 @@ export async function POST(request: Request) {
         username,
         display_name: displayName || null,
       },
-      emailRedirectTo: `${origin}/auth/callback?next=/account`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+        DEFAULT_AUTH_REDIRECT,
+      )}`,
     },
   });
 
