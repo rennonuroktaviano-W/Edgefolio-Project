@@ -106,13 +106,6 @@ export function RiskManagement() {
           </div>
         </Reveal>
       </div>
-
-      <Reveal className="mx-auto mt-8 max-w-5xl" delay={200}>
-        <p className="text-xs text-muted">
-          Illustrative risk metrics shown for example only, not live account
-          data.
-        </p>
-      </Reveal>
     </section>
   );
 }

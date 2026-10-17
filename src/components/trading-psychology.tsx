@@ -85,12 +85,6 @@ export function TradingPsychology() {
           </div>
         </Reveal>
       </div>
-
-      <Reveal className="mx-auto mt-8 max-w-5xl" delay={200}>
-        <p className="text-xs text-muted">
-          Example journal entry shown for illustration only.
-        </p>
-      </Reveal>
     </section>
   );
 }

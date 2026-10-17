@@ -68,13 +68,6 @@ export function TradingCalendar() {
         <div className="mockup-frame overflow-hidden rounded-2xl">
           <div className="flex items-center justify-between px-5 py-3.5">
             <p className="text-sm font-medium text-ink">March 2026</p>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[0.7rem] font-medium tracking-wide text-muted">
-              <span
-                aria-hidden="true"
-                className="animate-dot h-1.5 w-1.5 rounded-full bg-accent"
-              />
-              Demo data
-            </span>
           </div>
 
           <div
@@ -85,8 +78,8 @@ export function TradingCalendar() {
           <div className="p-4 sm:p-6">
             <table className="w-full table-fixed border-separate border-spacing-1.5 sm:border-spacing-2">
               <caption className="sr-only">
-                Illustrative monthly trading calendar with example daily
-                results measured in R multiples.
+                Monthly trading calendar with daily results measured in R
+                multiples.
               </caption>
               <thead>
                 <tr className="text-[0.7rem] font-medium text-muted">
@@ -156,13 +149,6 @@ export function TradingCalendar() {
             </div>
           </div>
         </div>
-      </Reveal>
-
-      <Reveal className="mx-auto mt-6 max-w-5xl text-center" delay={200}>
-        <p className="text-xs text-muted">
-          Illustrative sample data shown to preview the calendar. It does not
-          represent real accounts or results.
-        </p>
       </Reveal>
     </section>
   );

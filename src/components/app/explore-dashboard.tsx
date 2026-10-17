@@ -121,7 +121,7 @@ function EquityChart({ line }: { line: string }) {
     <svg
       viewBox="0 0 640 220"
       role="img"
-      aria-label="Demonstration equity curve for the selected period"
+      aria-label="Equity curve for the selected period"
       className="h-full w-full"
       preserveAspectRatio="none"
     >
@@ -206,7 +206,7 @@ function exportCsv(rows: Trade[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "edgefolio-demo-trades.csv";
+  link.download = "edgefolio-trades.csv";
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -355,7 +355,7 @@ export function ExploreDashboard() {
             <div>
               <p className="text-sm font-medium text-ink">Recent trades</p>
               <p className="mt-1 text-xs text-muted">
-                Showing {filteredTrades.length} of {TRADES.length} demo trades
+                Showing {filteredTrades.length} of {TRADES.length} trades
               </p>
             </div>
 
@@ -395,9 +395,9 @@ export function ExploreDashboard() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[34rem] text-left">
-              <caption className="sr-only">
-                Illustrative demo trades with date, symbol, side, and result.
-              </caption>
+                <caption className="sr-only">
+                  Trades with date, symbol, side, and result.
+                </caption>
               <thead>
                 <tr className="text-xs text-muted">
                   <th scope="col" className="px-5 py-3 font-medium sm:px-6">
@@ -471,13 +471,6 @@ export function ExploreDashboard() {
             </table>
           </div>
         </div>
-      </Reveal>
-
-      <Reveal delay={180}>
-        <p className="text-xs text-muted">
-          Illustrative sample data shown to preview the interface. It does not
-          represent real accounts or results.
-        </p>
       </Reveal>
     </div>
   );

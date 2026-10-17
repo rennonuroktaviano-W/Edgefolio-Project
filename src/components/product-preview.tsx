@@ -25,7 +25,7 @@ function EquityCurve() {
     <svg
       viewBox="0 0 640 220"
       role="img"
-      aria-label="Demonstration equity curve trending upward over the last 90 days"
+      aria-label="Equity curve trending upward over the last 90 days"
       className="h-full w-full"
       preserveAspectRatio="none"
     >
@@ -104,13 +104,6 @@ export function ProductPreview() {
               <span className="h-3 w-3 rounded-full bg-hairline-strong" />
               <span className="h-3 w-3 rounded-full bg-hairline-strong" />
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[0.7rem] font-medium tracking-wide text-muted">
-              <span
-                aria-hidden="true"
-                className="animate-dot h-1.5 w-1.5 rounded-full bg-accent"
-              />
-              Demo data
-            </span>
           </div>
 
           <div
@@ -152,7 +145,7 @@ export function ProductPreview() {
             <div className="soft-frame overflow-hidden rounded-xl bg-surface-raised">
               <table className="w-full text-left">
                 <caption className="sr-only">
-                  Illustrative sample trades shown to preview the interface.
+                  Recent trades with symbol, side, date, and result.
                 </caption>
                 <thead>
                   <tr className="text-xs text-muted">
@@ -209,13 +202,6 @@ export function ProductPreview() {
             </div>
           </div>
         </Spotlight>
-      </Reveal>
-
-      <Reveal className="mx-auto mt-6 max-w-5xl text-center" delay={200}>
-        <p className="text-xs text-muted">
-          Illustrative sample data shown to preview the interface. It does not
-          represent real accounts or results.
-        </p>
       </Reveal>
     </section>
   );

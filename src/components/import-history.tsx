@@ -80,13 +80,6 @@ export function ImportHistory() {
               <span className="h-3 w-3 rounded-full bg-hairline-strong" />
               <span className="h-3 w-3 rounded-full bg-hairline-strong" />
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[0.7rem] font-medium tracking-wide text-muted">
-              <span
-                aria-hidden="true"
-                className="animate-dot h-1.5 w-1.5 rounded-full bg-accent"
-              />
-              Demo data
-            </span>
           </div>
 
           <div
@@ -200,12 +193,6 @@ export function ImportHistory() {
             ))}
           </ol>
         </div>
-      </Reveal>
-
-      <Reveal className="mx-auto mt-6 max-w-5xl text-center" delay={200}>
-        <p className="text-xs text-muted">
-          Illustrative workflow shown for example only. No files are uploaded.
-        </p>
       </Reveal>
     </section>
   );
