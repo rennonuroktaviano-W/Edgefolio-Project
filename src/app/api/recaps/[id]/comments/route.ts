@@ -1,10 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { clientIp, isRateLimited } from "@/lib/auth/rate-limit";
 import { readUsername } from "@/lib/auth/user-lookup";
+import { listComments } from "@/lib/recaps/queries";
 
 type Context = { params: Promise<{ id: string }> };
 
 const MAX_COMMENT = 1000;
+
+export async function GET(_request: Request, { params }: Context) {
+  const { id } = await params;
+  const comments = await listComments(id);
+  return Response.json({ comments });
+}
 
 export async function POST(request: Request, { params }: Context) {
   if (isRateLimited(`recap:comment:${clientIp(request)}`, 40, 60_000)) {

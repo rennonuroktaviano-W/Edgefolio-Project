@@ -1,24 +1,33 @@
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-import { SavedIcon } from "@/components/app/icons";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/app/page-header";
+import { FeedSkeleton } from "@/components/app/skeleton";
+import { SavedRecapsView } from "@/components/app/saved/saved-recaps-view";
+import { listSavedRecaps } from "@/lib/recaps/queries";
 
 export const metadata = {
   title: "Saved Recaps — Edgefolio",
-  description: "Bookmarked public trade recaps.",
+  description: "Public recaps you have bookmarked.",
 };
+
+async function SavedData() {
+  const recaps = await listSavedRecaps();
+  return <SavedRecapsView recaps={recaps} />;
+}
 
 export default function SavedRecapsPage() {
   return (
-    <FeaturePlaceholder
-      eyebrow="SAVED RECAPS"
-      title="Bookmark recaps to revisit."
-      description="Saved Recaps will hold the public trade recaps you bookmark from Explore and Community."
-      Icon={SavedIcon}
-      points={[
-        "Bookmarked public recaps",
-        "Revisit and reflect",
-        "Organize by topic",
-        "Only public recaps you saved",
-      ]}
-    />
+    <div>
+      <PageHeader
+        eyebrow="SAVED RECAPS"
+        title="Your reading list."
+        description="Recaps you bookmarked while browsing the community."
+      />
+
+      <div className="mt-8">
+        <Suspense fallback={<FeedSkeleton />}>
+          <SavedData />
+        </Suspense>
+      </div>
+    </div>
   );
 }

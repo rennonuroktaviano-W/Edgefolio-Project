@@ -203,3 +203,27 @@ export function SettingsIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function HeartIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M10 16.25C6.5 14 3.5 11.6 3.5 8.6A3.35 3.35 0 0 1 10 6.9a3.35 3.35 0 0 1 6.5 1.7c0 3-3 5.4-6.5 7.65z" />
+    </svg>
+  );
+}
+
+export function CommentIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M4 5.5h12v7.5H9l-3.5 3V13H4z" />
+    </svg>
+  );
+}
+
+export function BookmarkIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M6 3.5h8a1.25 1.25 0 0 1 1.25 1.25v11.75L10 13.5l-5.25 3V4.75A1.25 1.25 0 0 1 6 3.5z" />
+    </svg>
+  );
+}
