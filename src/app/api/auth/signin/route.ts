@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isRateLimited, clientIp } from "@/lib/auth/rate-limit";
+import { findUserByUsername } from "@/lib/auth/user-lookup";
 import {
   isValidUsername,
   looksLikeEmail,
@@ -52,8 +52,9 @@ export async function POST(request: Request) {
       return Response.json({ error: GENERIC_ERROR }, { status: 401 });
     }
 
-    const admin = createAdminClient();
-    if (!admin) {
+    const lookup = await findUserByUsername(username);
+
+    if (lookup.status === "unavailable") {
       return Response.json(
         {
           error:
@@ -63,26 +64,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (!profile) {
+    if (lookup.status !== "found" || !lookup.email) {
       return Response.json({ error: GENERIC_ERROR }, { status: 401 });
     }
 
-    const { data: userData, error: userError } =
-      await admin.auth.admin.getUserById(
-        (profile as { id: string }).id,
-      );
-
-    if (userError || !userData.user?.email) {
-      return Response.json({ error: GENERIC_ERROR }, { status: 401 });
-    }
-
-    email = userData.user.email;
+    email = lookup.email;
   }
 
   const { error } = await supabase.auth.signInWithPassword({

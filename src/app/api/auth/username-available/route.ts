@@ -1,6 +1,6 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isRateLimited, clientIp } from "@/lib/auth/rate-limit";
 import { isValidUsername, normalizeUsername } from "@/lib/auth/validation";
+import { findUserByUsername } from "@/lib/auth/user-lookup";
 
 export async function GET(request: Request) {
   if (isRateLimited(`username:${clientIp(request)}`, 30, 60_000)) {
@@ -18,22 +18,13 @@ export async function GET(request: Request) {
     return Response.json({ available: false, reason: "invalid" });
   }
 
-  const admin = createAdminClient();
-  if (!admin) {
-    // Cannot verify without the service-role key. The client will fall back to
+  const lookup = await findUserByUsername(username);
+
+  if (lookup.status === "unavailable") {
+    // Cannot verify without the service-role key. The client falls back to
     // server-side validation on submit.
     return Response.json({ available: null, reason: "unavailable" });
   }
 
-  const { data, error } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("username", username)
-    .maybeSingle();
-
-  if (error) {
-    return Response.json({ available: null, reason: "error" }, { status: 500 });
-  }
-
-  return Response.json({ available: !data });
+  return Response.json({ available: lookup.status === "missing" });
 }

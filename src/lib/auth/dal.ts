@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { io } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { readUsername } from "@/lib/auth/user-lookup";
 
 export type CurrentUser = {
   id: string;
@@ -12,11 +13,13 @@ export type CurrentUser = {
   avatarUrl: string | null;
 };
 
-type ProfileRow = {
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-};
+function readString(
+  metadata: Record<string, unknown>,
+  key: string,
+): string | null {
+  const value = metadata[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 // Data Access Layer. Callers must render it behind a <Suspense> boundary
 // because it reads cookies (required with cacheComponents enabled).
@@ -39,19 +42,16 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     return null;
   }
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("username, display_name, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const profile = (data as ProfileRow | null) ?? null;
+  const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
 
   return {
     id: user.id,
     email: user.email ?? null,
-    username: profile?.username ?? null,
-    displayName: profile?.display_name ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
+    username: readUsername(metadata),
+    displayName:
+      readString(metadata, "display_name") ??
+      readString(metadata, "full_name") ??
+      readString(metadata, "name"),
+    avatarUrl: readString(metadata, "avatar_url"),
   };
 });
