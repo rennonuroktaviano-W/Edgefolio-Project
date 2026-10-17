@@ -1,24 +1,25 @@
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-import { AnalyticsIcon } from "@/components/app/icons";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/app/page-header";
+import { PanelSkeleton } from "@/components/app/skeleton";
+import { AnalyticsContent } from "@/components/app/analytics/analytics-content";
 
 export const metadata = {
   title: "Analytics — Edgefolio",
-  description: "Performance breakdowns and strategy statistics.",
+  description: "Performance analytics calculated from your own trades.",
 };
 
 export default function AnalyticsPage() {
   return (
-    <FeaturePlaceholder
-      eyebrow="ANALYTICS"
-      title="Break down your performance."
-      description="Analytics will surface performance breakdowns and strategy statistics across your trades."
-      Icon={AnalyticsIcon}
-      points={[
-        "Performance breakdowns",
-        "Strategy statistics",
-        "Compare setups and instruments",
-        "Identify where your edge is",
-      ]}
-    />
+    <div>
+      <PageHeader
+        eyebrow="ANALYTICS"
+        title="See what your data says."
+        description="Equity, profit factor, expectancy, drawdown, and performance by asset, strategy, and period — all computed from your own trade history."
+      />
+
+      <Suspense fallback={<PanelSkeleton height="h-96" />}>
+        <AnalyticsContent />
+      </Suspense>
+    </div>
   );
 }

@@ -1,24 +1,25 @@
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-import { ShieldIcon } from "@/components/app/icons";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/app/page-header";
+import { PanelSkeleton } from "@/components/app/skeleton";
+import { RiskContent } from "@/components/app/risk/risk-content";
 
 export const metadata = {
   title: "Risk Management — Edgefolio",
-  description: "Position risk, risk/reward, drawdown, and loss limits.",
+  description: "Drawdown, R-multiples, and position-sizing insight from your trades.",
 };
 
 export default function RiskPage() {
   return (
-    <FeaturePlaceholder
-      eyebrow="RISK MANAGEMENT"
-      title="Keep risk in check."
-      description="Risk Management will cover position risk, risk/reward, drawdown, and loss limits."
-      Icon={ShieldIcon}
-      points={[
-        "Position risk",
-        "Risk/reward per trade",
-        "Drawdown monitoring",
-        "Loss limits and discipline rules",
-      ]}
-    />
+    <div>
+      <PageHeader
+        eyebrow="RISK MANAGEMENT"
+        title="Protect the downside."
+        description="Drawdown, risk per trade, and R-multiple distribution calculated from your own trades and stop losses."
+      />
+
+      <Suspense fallback={<PanelSkeleton height="h-96" />}>
+        <RiskContent />
+      </Suspense>
+    </div>
   );
 }

@@ -1,24 +1,31 @@
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-import { TradesIcon } from "@/components/app/icons";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/app/page-header";
+import { PanelSkeleton } from "@/components/app/skeleton";
+import { TradesView } from "@/components/app/trades/trades-view";
+import { listTrades } from "@/lib/trades/queries";
 
 export const metadata = {
   title: "Trades — Edgefolio",
-  description: "Your transaction history and detailed trade records.",
+  description: "Your private trade history and performance.",
 };
+
+async function TradesData() {
+  const trades = await listTrades();
+  return <TradesView trades={trades} />;
+}
 
 export default function TradesPage() {
   return (
-    <FeaturePlaceholder
-      eyebrow="TRADES"
-      title="Your full transaction history."
-      description="Trades will list your transaction history and detailed records for each trade."
-      Icon={TradesIcon}
-      points={[
-        "Transaction history",
-        "Detailed trade records",
-        "Import your trade history",
-        "Filter and search",
-      ]}
-    />
+    <div>
+      <PageHeader
+        eyebrow="TRADES"
+        title="Your trade history."
+        description="Log every trade to build a private record of your execution, results, and risk. Only you can see this data."
+      />
+
+      <Suspense fallback={<PanelSkeleton height="h-96" />}>
+        <TradesData />
+      </Suspense>
+    </div>
   );
 }

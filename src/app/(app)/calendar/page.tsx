@@ -1,24 +1,31 @@
-import { FeaturePlaceholder } from "@/components/app/feature-placeholder";
-import { CalendarIcon } from "@/components/app/icons";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/app/page-header";
+import { PanelSkeleton } from "@/components/app/skeleton";
+import { CalendarView } from "@/components/app/calendar/calendar-view";
+import { listTrades } from "@/lib/trades/queries";
 
 export const metadata = {
   title: "Calendar — Edgefolio",
-  description: "Daily trading activity and reviews.",
+  description: "Your monthly profit and loss calendar.",
 };
+
+async function CalendarData() {
+  const trades = await listTrades();
+  return <CalendarView trades={trades} />;
+}
 
 export default function CalendarPage() {
   return (
-    <FeaturePlaceholder
-      eyebrow="CALENDAR"
-      title="Review day by day."
-      description="Calendar will show your daily trading activity and reviews in a month view."
-      Icon={CalendarIcon}
-      points={[
-        "Daily trading activity",
-        "Day-by-day reviews",
-        "Spot streaks and gaps",
-        "Connected to your journal",
-      ]}
-    />
+    <div>
+      <PageHeader
+        eyebrow="CALENDAR"
+        title="Your month at a glance."
+        description="See the days you traded and how each one closed, built from your own trade records."
+      />
+
+      <Suspense fallback={<PanelSkeleton height="h-96" />}>
+        <CalendarData />
+      </Suspense>
+    </div>
   );
 }
