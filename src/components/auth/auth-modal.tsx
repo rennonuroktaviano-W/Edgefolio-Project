@@ -162,7 +162,7 @@ export function AuthModal({
       onClose();
       markAppSession();
       router.refresh();
-      router.replace(DEFAULT_AUTH_REDIRECT);
+      router.push(DEFAULT_AUTH_REDIRECT);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -202,7 +202,7 @@ export function AuthModal({
       onClose();
       markAppSession();
       router.refresh();
-      router.replace(DEFAULT_AUTH_REDIRECT);
+      router.push(DEFAULT_AUTH_REDIRECT);
     } catch {
       setError("Network error. Please try again.");
     } finally {
