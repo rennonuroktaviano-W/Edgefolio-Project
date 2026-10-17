@@ -11,6 +11,8 @@ import { AuthModal, type AuthMode } from "@/components/auth/auth-modal";
 
 type AuthModalContextValue = {
   openAuth: (mode?: AuthMode) => void;
+  isAuthenticated: boolean;
+  setAuthenticated: (authenticated: boolean) => void;
 };
 
 const AuthModalContext = createContext<AuthModalContextValue | null>(null);
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("signin");
   const [instanceKey, setInstanceKey] = useState(0);
+  const [isAuthenticated, setAuthenticated] = useState(false);
 
   const openAuth = useCallback((nextMode: AuthMode = "signin") => {
     setMode(nextMode);
@@ -36,7 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const closeAuth = useCallback(() => setOpen(false), []);
 
-  const value = useMemo(() => ({ openAuth }), [openAuth]);
+  const value = useMemo(
+    () => ({ openAuth, isAuthenticated, setAuthenticated }),
+    [openAuth, isAuthenticated],
+  );
 
   return (
     <AuthModalContext.Provider value={value}>

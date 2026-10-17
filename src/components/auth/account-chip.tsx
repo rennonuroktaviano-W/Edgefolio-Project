@@ -1,19 +1,22 @@
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { UserMenu } from "@/components/auth/user-menu";
+import { AuthStateBridge } from "@/components/auth/auth-state-bridge";
 
 async function AccountChipContent() {
   const user = await getCurrentUser();
-  if (!user) {
-    return null;
-  }
 
   return (
-    <div className="pointer-events-none fixed right-4 top-4 z-40">
-      <div className="pointer-events-auto">
-        <UserMenu username={user.username} email={user.email} />
-      </div>
-    </div>
+    <>
+      <AuthStateBridge authenticated={Boolean(user)} />
+      {user ? (
+        <div className="pointer-events-none fixed right-4 top-4 z-40">
+          <div className="pointer-events-auto">
+            <UserMenu username={user.username} email={user.email} />
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

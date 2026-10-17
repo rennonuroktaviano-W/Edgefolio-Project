@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useAuthModal } from "@/components/auth/auth-provider";
 import { siteConfig } from "@/config/site";
+import { DEFAULT_AUTH_REDIRECT } from "@/lib/auth/redirect";
 
 const ctaClasses =
   "btn-cta inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-night transition-colors duration-200 hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:bg-accent-strong";
@@ -29,7 +31,7 @@ function ArrowIcon() {
 }
 
 export function CtaButton() {
-  const { openAuth } = useAuthModal();
+  const { openAuth, isAuthenticated } = useAuthModal();
 
   if (siteConfig.cta.href) {
     return (
@@ -38,6 +40,16 @@ export function CtaButton() {
         {siteConfig.cta.label}
         <ArrowIcon />
       </a>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <Link href={DEFAULT_AUTH_REDIRECT} className={ctaClasses}>
+        <Shine />
+        Open Dashboard
+        <ArrowIcon />
+      </Link>
     );
   }
 
