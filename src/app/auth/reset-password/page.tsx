@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
         className="bg-ambient pointer-events-none fixed inset-0 -z-50"
       />
       <div className="soft-frame w-full max-w-md rounded-3xl border border-hairline/70 bg-surface-raised/70 p-8 backdrop-blur-xl">
-        <Logo className="h-8 w-auto" />
+        <Logo priority className="h-8 w-auto" />
         <Suspense
           fallback={
             <p className="mt-6 text-sm text-muted" aria-live="polite">

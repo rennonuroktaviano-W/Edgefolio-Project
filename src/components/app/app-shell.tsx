@@ -141,7 +141,7 @@ function SidebarContent({
           collapsed ? "justify-center px-2" : "justify-between gap-2 px-4"
         }`}
       >
-        {collapsed ? null : <Logo className="h-6 w-auto" />}
+        {collapsed ? null : <Logo priority className="h-6 w-auto" />}
         {showToggle ? (
           <button
             type="button"
@@ -297,7 +297,7 @@ export function AppShell({ children, account }: AppShellProps) {
           >
             <MenuIcon className="h-5 w-5" />
           </button>
-          <Logo className="h-6 w-auto" />
+          <Logo priority className="h-6 w-auto" />
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">

@@ -68,7 +68,7 @@ export default function AuthErrorPage({
         className="bg-ambient pointer-events-none fixed inset-0 -z-50"
       />
       <div className="soft-frame w-full max-w-md rounded-3xl border border-hairline/70 bg-surface-raised/70 p-8 text-center backdrop-blur-xl">
-        <Logo className="mx-auto h-8 w-auto" />
+        <Logo priority className="mx-auto h-8 w-auto" />
         <Suspense
           fallback={
             <>

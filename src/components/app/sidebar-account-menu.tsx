@@ -40,6 +40,17 @@ export function SidebarAccountMenu({ user }: SidebarAccountMenuProps) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // This panel is streamed inside its own Suspense boundary, so it can hydrate
+  // after AppShell's mount effect already applied the persisted collapse
+  // preference. Defer applying `collapsed` until this component has mounted so
+  // the first client render matches the server markup (always rendered expanded).
+  const [mounted, setMounted] = useState(false);
+  const showCollapsed = mounted && collapsed;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -66,7 +77,7 @@ export function SidebarAccountMenu({ user }: SidebarAccountMenuProps) {
   }, [open]);
 
   if (!user) {
-    return <SignInButton collapsed={collapsed} />;
+    return <SignInButton collapsed={showCollapsed} />;
   }
 
   const label = user.username ?? user.email ?? "Account";
@@ -92,15 +103,15 @@ export function SidebarAccountMenu({ user }: SidebarAccountMenuProps) {
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
-        title={collapsed ? label : undefined}
+        title={showCollapsed ? label : undefined}
         className={`flex w-full items-center gap-2.5 rounded-xl border border-hairline bg-surface py-1.5 text-sm text-ink transition-colors hover:border-hairline-strong hover:bg-surface-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-          collapsed ? "justify-center px-1.5" : "pl-1.5 pr-3"
+          showCollapsed ? "justify-center px-1.5" : "pl-1.5 pr-3"
         }`}
       >
         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-night">
           {initial}
         </span>
-        {collapsed ? null : (
+        {showCollapsed ? null : (
           <span className="min-w-0 flex-1 truncate text-left">{label}</span>
         )}
       </button>
@@ -109,7 +120,7 @@ export function SidebarAccountMenu({ user }: SidebarAccountMenuProps) {
         <div
           role="menu"
           className={`absolute bottom-full z-30 mb-2 w-52 overflow-hidden rounded-2xl border border-hairline bg-surface-raised/95 p-1 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl ${
-            collapsed ? "left-0" : "right-0"
+            showCollapsed ? "left-0" : "right-0"
           }`}
         >
           {user.email ? (
