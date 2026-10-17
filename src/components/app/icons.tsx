@@ -138,3 +138,68 @@ export function PlusIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function CommunityIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <circle cx="7.75" cy="7.5" r="2.75" />
+      <path d="M3 16.5a4.75 4.75 0 0 1 9.5 0" />
+      <path d="M13.5 5.25a2.75 2.75 0 0 1 0 5.5" />
+      <path d="M14.25 11.85a4.75 4.75 0 0 1 2.75 4.65" />
+    </svg>
+  );
+}
+
+export function LeaderboardIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M6.75 3.5h6.5v3.75a3.25 3.25 0 0 1-6.5 0z" />
+      <path d="M6.75 4.75h-2a2 2 0 0 0 2 2" />
+      <path d="M13.25 4.75h2a2 2 0 0 1-2 2" />
+      <path d="M10 10.5v2.75" />
+      <path d="M7.5 16.5h5" />
+      <path d="M8.25 16.5v-1.75a1.75 1.75 0 0 1 3.5 0v1.75" />
+    </svg>
+  );
+}
+
+export function DashboardIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <rect x="3.25" y="3.25" width="6" height="6" rx="1.5" />
+      <rect x="10.75" y="3.25" width="6" height="3.5" rx="1.5" />
+      <rect x="10.75" y="8.25" width="6" height="8.5" rx="1.5" />
+      <rect x="3.25" y="10.75" width="6" height="6" rx="1.5" />
+    </svg>
+  );
+}
+
+export function TradesIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M5 6.5h9.5" />
+      <path d="m11.5 3.5 3 3-3 3" />
+      <path d="M15 13.5H5.5" />
+      <path d="m8.5 16.5-3-3 3-3" />
+    </svg>
+  );
+}
+
+export function SavedIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M6 3.5h8a1.25 1.25 0 0 1 1.25 1.25v11.75L10 13.5l-5.25 3V4.75A1.25 1.25 0 0 1 6 3.5z" />
+    </svg>
+  );
+}
+
+export function SettingsIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M4.25 6.25h11.5" />
+      <path d="M4.25 13.75h11.5" />
+      <circle cx="8" cy="6.25" r="1.75" />
+      <circle cx="12" cy="13.75" r="1.75" />
+    </svg>
+  );
+}

@@ -3,7 +3,7 @@ import { AppShell } from "@/components/app/app-shell";
 import { SidebarAccount } from "@/components/app/sidebar-account";
 import { UsernameOnboarding } from "@/components/app/username-onboarding";
 
-export default function ExploreLayout({ children }: LayoutProps<"/explore">) {
+export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="relative">
       <div

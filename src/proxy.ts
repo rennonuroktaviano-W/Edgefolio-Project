@@ -4,6 +4,22 @@ import { createServerClient } from "@supabase/ssr";
 // Refreshes the Supabase session on every request and keeps the auth cookies in
 // sync between the browser and the server. In Next.js 16 this file convention
 // replaces the old `middleware.ts`.
+
+// Every authenticated app route. Keep in sync with the sidebar navigation.
+const APP_ROUTE_PREFIXES = [
+  "/explore",
+  "/community",
+  "/leaderboard",
+  "/dashboard",
+  "/journal",
+  "/trades",
+  "/analytics",
+  "/calendar",
+  "/risk",
+  "/saved-recaps",
+  "/settings",
+];
+
 export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -42,7 +58,9 @@ export async function proxy(request: NextRequest) {
   // with a flag so the client can drop any stale per-tab marker (no redirect
   // loop).
   const { pathname } = request.nextUrl;
-  const isAppRoute = pathname === "/explore" || pathname.startsWith("/explore/");
+  const isAppRoute = APP_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 
   if (isAppRoute && !user) {
     const url = request.nextUrl.clone();

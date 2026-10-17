@@ -11,26 +11,57 @@ import {
   AnalyticsIcon,
   CalendarIcon,
   CloseIcon,
+  CommunityIcon,
   CompassIcon,
+  DashboardIcon,
   JournalIcon,
+  LeaderboardIcon,
   MenuIcon,
   PanelIcon,
+  SavedIcon,
+  SettingsIcon,
   ShieldIcon,
+  TradesIcon,
 } from "@/components/app/icons";
 
 type NavItem = {
   label: string;
   href: string;
   Icon: ComponentType<{ className?: string }>;
-  soon?: boolean;
 };
 
-const PRIMARY_NAV: NavItem[] = [
-  { label: "Explore", href: "/explore", Icon: CompassIcon },
-  { label: "Journal", href: "/journal", Icon: JournalIcon, soon: true },
-  { label: "Calendar", href: "/calendar", Icon: CalendarIcon, soon: true },
-  { label: "Analytics", href: "/analytics", Icon: AnalyticsIcon, soon: true },
-  { label: "Risk", href: "/risk", Icon: ShieldIcon, soon: true },
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Discover",
+    items: [
+      { label: "Explore", href: "/explore", Icon: CompassIcon },
+      { label: "Community", href: "/community", Icon: CommunityIcon },
+      { label: "Leaderboard", href: "/leaderboard", Icon: LeaderboardIcon },
+    ],
+  },
+  {
+    label: "My Workspace",
+    items: [
+      { label: "My Dashboard", href: "/dashboard", Icon: DashboardIcon },
+      { label: "Journal", href: "/journal", Icon: JournalIcon },
+      { label: "Trades", href: "/trades", Icon: TradesIcon },
+      { label: "Analytics", href: "/analytics", Icon: AnalyticsIcon },
+      { label: "Calendar", href: "/calendar", Icon: CalendarIcon },
+      { label: "Risk Management", href: "/risk", Icon: ShieldIcon },
+    ],
+  },
+  {
+    label: "Personal",
+    items: [
+      { label: "Saved Recaps", href: "/saved-recaps", Icon: SavedIcon },
+      { label: "Settings", href: "/settings", Icon: SettingsIcon },
+    ],
+  },
 ];
 
 const COLLAPSE_STORAGE_KEY = "edgefolio:sidebar-collapsed";
@@ -70,30 +101,6 @@ function NavLink({
 }) {
   const Icon = item.Icon;
   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-  if (item.soon) {
-    return (
-      <li>
-        <span
-          aria-disabled="true"
-          title={collapsed ? `${item.label} — coming soon` : undefined}
-          className={`flex cursor-not-allowed items-center rounded-xl py-2.5 text-sm text-faint ${
-            collapsed ? "justify-center px-2.5" : "gap-3 px-3"
-          }`}
-        >
-          <Icon className="h-5 w-5 shrink-0" />
-          {collapsed ? null : (
-            <>
-              <span className="flex-1 truncate">{item.label}</span>
-              <span className="rounded-full bg-white/5 px-2 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide text-faint">
-                Soon
-              </span>
-            </>
-          )}
-        </span>
-      </li>
-    );
-  }
 
   return (
     <li>
@@ -165,17 +172,38 @@ function SidebarContent({
         aria-label="Primary"
         className="scrollbar-none flex-1 overflow-y-auto px-2 py-3"
       >
-        <ul className="space-y-1">
-          {PRIMARY_NAV.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              collapsed={collapsed}
-              pathname={pathname}
-              onNavigate={onNavigate}
-            />
-          ))}
-        </ul>
+        {NAV_GROUPS.map((group, index) => (
+          <div key={group.label}>
+            {collapsed ? (
+              index > 0 ? (
+                <div
+                  aria-hidden="true"
+                  className="mx-2 my-2.5 h-px bg-hairline"
+                />
+              ) : null
+            ) : (
+              <p
+                className={`px-3 pb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-faint ${
+                  index > 0 ? "mt-5" : ""
+                }`}
+              >
+                {group.label}
+              </p>
+            )}
+
+            <ul className="space-y-1">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  collapsed={collapsed}
+                  pathname={pathname}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       <div
