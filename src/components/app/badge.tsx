@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 export type BadgeTone =
   | "accent"
+  | "violet"
   | "positive"
   | "negative"
   | "warning"
@@ -10,6 +11,7 @@ export type BadgeTone =
 
 const TONES: Record<BadgeTone, string> = {
   accent: "border-accent/40 bg-accent/10 text-accent",
+  violet: "border-violet/40 bg-violet/10 text-violet-ink",
   positive: "border-positive/40 bg-positive/10 text-positive",
   negative: "border-negative/40 bg-negative/10 text-negative",
   warning: "border-warning/40 bg-warning/10 text-warning",

@@ -147,7 +147,7 @@ export async function RiskContent() {
                   </span>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-strong">
                     <div
-                      className="h-full rounded-full bg-accent/70"
+                      className="h-full rounded-full bg-violet/70"
                       style={{
                         width: `${(bucket.count / maxBucket) * 100}%`,
                       }}

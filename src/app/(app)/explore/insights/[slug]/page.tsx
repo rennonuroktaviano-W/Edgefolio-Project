@@ -33,7 +33,7 @@ export default async function InsightArticlePage({ params }: Params) {
 
       <header className="reveal mt-5">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="accent">{article.category}</Badge>
+          <Badge tone="violet">{article.category}</Badge>
           <span className="text-xs text-faint">
             {formatDate(article.date)} · {article.readingMinutes} min read
           </span>

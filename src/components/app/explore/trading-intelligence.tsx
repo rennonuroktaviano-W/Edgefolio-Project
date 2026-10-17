@@ -10,6 +10,7 @@ export function TradingIntelligence() {
     <section aria-label="Trading intelligence" className="space-y-4">
       <SectionHeading
         Icon={JournalIcon}
+        iconTone="violet"
         title="Trading intelligence"
         description="Editorial notes on process, psychology, and risk — clearly labeled, never market signals."
       />
@@ -21,7 +22,7 @@ export function TradingIntelligence() {
             className="soft-frame group flex flex-col rounded-2xl bg-surface-raised p-5 transition-colors hover:border-hairline-strong"
           >
             <div className="flex items-center justify-between gap-2">
-              <Badge tone="accent">{article.category}</Badge>
+              <Badge tone="violet">{article.category}</Badge>
               <span className="inline-flex items-center gap-1.5 text-xs text-faint">
                 <ClockIcon className="h-3.5 w-3.5" />
                 {article.readingMinutes} min
@@ -30,7 +31,7 @@ export function TradingIntelligence() {
             <h3 className="mt-3 text-base font-semibold tracking-tight text-ink">
               <Link
                 href={`/explore/insights/${article.slug}`}
-                className="hover:text-accent"
+                className="hover:text-violet-ink"
               >
                 {article.title}
               </Link>
@@ -42,7 +43,7 @@ export function TradingIntelligence() {
               </span>
               <Link
                 href={`/explore/insights/${article.slug}`}
-                className="text-xs font-medium text-accent hover:underline"
+                className="text-xs font-medium text-violet-ink hover:underline"
               >
                 Read article →
               </Link>

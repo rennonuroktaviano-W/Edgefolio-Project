@@ -16,6 +16,7 @@ export function FeaturedRecap({ recap }: { recap: Recap | null }) {
     <section aria-label="Featured trade recap" className="space-y-4">
       <SectionHeading
         Icon={StarIcon}
+        iconTone="violet"
         title="Featured trade recap"
         description="A real recap from the community, chosen by engagement and a reported result."
       />
@@ -57,7 +58,7 @@ export function FeaturedRecap({ recap }: { recap: Recap | null }) {
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {recap.symbol ? (
-                  <Badge tone="accent">{recap.symbol}</Badge>
+                  <Badge tone="violet">{recap.symbol}</Badge>
                 ) : null}
                 {recap.direction ? (
                   <Badge

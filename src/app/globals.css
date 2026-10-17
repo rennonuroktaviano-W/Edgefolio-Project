@@ -1,31 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  /* Surfaces */
-  --color-night: #10120f;
-  --color-surface: #141a16;
-  --color-surface-raised: #1a211b;
-  --color-surface-strong: #202820;
+  /* Surfaces — obsidian green base with forest-surface cards */
+  --color-night: #111610;
+  --color-surface: #182016;
+  --color-surface-raised: #222820;
+  --color-surface-strong: #2a3229;
 
   /* Text */
-  --color-ink: #f4f5ef;
-  --color-muted: #a0a69a;
-  --color-faint: #70786d;
+  --color-ink: #f2f4ed;
+  --color-muted: #a0a99a;
+  --color-faint: #939c8c;
 
   /* Brand accent — electric lime */
-  --color-accent: #c8ff3d;
+  --color-accent: #c8ff36;
   --color-accent-strong: #b5ed2e;
-  --color-accent-alt: #a99aff;
+
+  /* Secondary accent — electric violet (analytics, insights, featured).
+   * -ink is a slightly lighter step so small violet text clears AA on cards. */
+  --color-violet: #9275ff;
+  --color-violet-ink: #9e88ff;
 
   /* Trading status */
-  --color-positive: #42d392;
-  --color-negative: #ff646e;
+  --color-positive: #43d9a3;
+  --color-negative: #ff7185;
   --color-warning: #f5bd4f;
-  --color-info: #75b8ff;
+  --color-info: #62c8ff;
 
   /* Borders */
-  --color-hairline: #293229;
-  --color-hairline-strong: #364136;
+  --color-hairline: #2e362c;
+  --color-hairline-strong: #394435;
 
   --animate-float: edgefolio-float 10s ease-in-out infinite;
   --animate-float-slow: edgefolio-float 16s ease-in-out infinite;

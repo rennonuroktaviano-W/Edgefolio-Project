@@ -9,6 +9,7 @@ export function MarketPulse({ snapshot }: { snapshot: MarketSnapshot | null }) {
     <section aria-label="Market pulse" className="space-y-4">
       <SectionHeading
         Icon={TrendUpIcon}
+        iconTone="info"
         title="Market pulse"
         description="A compact snapshot of the instruments you follow."
       />
@@ -30,7 +31,7 @@ export function MarketPulse({ snapshot }: { snapshot: MarketSnapshot | null }) {
                   className="rounded-xl border border-hairline bg-night/40 p-3.5"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-ink">
+                    <span className="text-sm font-medium text-info">
                       {quote.symbol}
                     </span>
                     {quote.changePercent === null ? null : (

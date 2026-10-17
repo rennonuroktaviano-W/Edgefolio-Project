@@ -1,21 +1,31 @@
 import type { ComponentType, ReactNode } from "react";
 
+const ICON_TONES = {
+  accent: "text-accent",
+  violet: "text-violet",
+  info: "text-info",
+} as const;
+
 export function SectionHeading({
   Icon,
   title,
   description,
   action,
+  iconTone = "accent",
 }: {
   Icon?: ComponentType<{ className?: string }>;
   title: string;
   description?: string;
   action?: ReactNode;
+  iconTone?: keyof typeof ICON_TONES;
 }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex items-start gap-3">
         {Icon ? (
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-hairline bg-surface text-accent">
+          <span
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-hairline bg-surface ${ICON_TONES[iconTone]}`}
+          >
             <Icon className="h-4 w-4" />
           </span>
         ) : null}
