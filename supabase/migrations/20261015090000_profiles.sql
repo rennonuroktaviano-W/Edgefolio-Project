@@ -8,7 +8,10 @@
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  username text not null,
+  -- NULL until the user picks a username in the app onboarding form. Multiple
+  -- NULLs are allowed by the unique index below, so unclaimed accounts do not
+  -- collide with each other.
+  username text,
   display_name text,
   avatar_url text,
   created_at timestamptz not null default now(),
@@ -57,9 +60,9 @@ create trigger profiles_set_updated_at
   for each row
   execute function public.set_updated_at();
 
--- Create a profile row whenever an auth user is created. Username comes from
--- raw_user_meta_data (set by sign-up). If it is missing or clashes, fall back
--- to a safe derived value so sign-up never breaks on the trigger.
+-- Create a profile row whenever an auth user is created. The username is left
+-- NULL until the user chooses one through the in-app onboarding form. We only
+-- keep a username from raw_user_meta_data when it is valid.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -69,14 +72,10 @@ as $$
 declare
   uname text;
 begin
-  uname := lower(coalesce(new.raw_user_meta_data ->> 'username', ''));
+  uname := lower(nullif(new.raw_user_meta_data ->> 'username', ''));
 
-  if uname !~ '^[a-z0-9_]{3,24}$' then
-    uname := lower(regexp_replace(split_part(coalesce(new.email, 'user'), '@', 1), '[^a-z0-9_]', '', 'g'));
-    if length(uname) < 3 then
-      uname := 'user';
-    end if;
-    uname := uname || '_' || substr(replace(new.id::text, '-', ''), 1, 4);
+  if uname is not null and uname !~ '^[a-z0-9_]{3,24}$' then
+    uname := null;
   end if;
 
   insert into public.profiles (id, username, display_name, avatar_url)
