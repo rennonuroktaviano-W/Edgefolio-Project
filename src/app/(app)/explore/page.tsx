@@ -15,6 +15,7 @@ import {
 import { ExploreFeedProvider } from "@/components/app/explore/explore-feed-context";
 import { ExploreHeader } from "@/components/app/explore/explore-header";
 import { MarketPulse } from "@/components/app/explore/market-pulse";
+import { MarketNews } from "@/components/app/explore/market-news";
 import { TrendingTopics } from "@/components/app/explore/trending-topics";
 import { FeaturedRecap } from "@/components/app/explore/featured-recap";
 import { CommunityFeed } from "@/components/app/explore/community-feed";
@@ -76,7 +77,11 @@ async function ExploreContent() {
       <ExploreHeader greeting={greeting} symbols={symbols} />
 
       <div className="mt-8 space-y-10">
-        <MarketPulse snapshot={snapshot} />
+        <MarketPulse
+          initialSnapshot={snapshot}
+          configured={isMarketConfigured()}
+        />
+        <MarketNews />
         <TrendingTopics symbols={symbols} />
         <FeaturedRecap recap={featured} />
         <CommunityFeed />

@@ -27,7 +27,11 @@ async function ProfileData({ username }: { username: string }) {
           title={`No public recaps from @${username}`}
           description="This trader has not shared anything publicly yet."
           action={
-            <Link href="/community" className="text-sm text-accent hover:underline">
+            <Link
+              href="/community"
+              transitionTypes={["nav-back"]}
+              className="text-sm text-accent hover:underline"
+            >
               Back to Community
             </Link>
           }

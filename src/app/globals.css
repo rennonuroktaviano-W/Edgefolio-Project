@@ -490,3 +490,68 @@ body {
     transform: translateX(3px);
   }
 }
+
+/* Route transitions. Enter/exit motion for in-app navigation, driven by the
+   React <ViewTransition> in (app)/template.tsx. Forward navigations slide
+   content in from the right; back navigations mirror it. Browsers without the
+   View Transitions API swap instantly and the app works normally. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: -60px;
+  animation:
+    150ms ease-in both edgefolio-vt-fade reverse,
+    400ms ease-in-out both edgefolio-vt-slide reverse;
+}
+
+::view-transition-new(.nav-forward) {
+  --slide-offset: 60px;
+  animation:
+    210ms ease-out 150ms both edgefolio-vt-fade,
+    400ms ease-in-out both edgefolio-vt-slide;
+}
+
+::view-transition-old(.nav-back) {
+  --slide-offset: 60px;
+  animation:
+    150ms ease-in both edgefolio-vt-fade reverse,
+    400ms ease-in-out both edgefolio-vt-slide reverse;
+}
+
+::view-transition-new(.nav-back) {
+  --slide-offset: -60px;
+  animation:
+    210ms ease-out 150ms both edgefolio-vt-fade,
+    400ms ease-in-out both edgefolio-vt-slide;
+}
+
+@keyframes edgefolio-vt-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes edgefolio-vt-slide {
+  from {
+    transform: translateX(var(--slide-offset));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

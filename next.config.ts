@@ -11,6 +11,21 @@ const nextConfig: NextConfig = {
         destination: "/explore",
         permanent: true,
       },
+      {
+        source: "/login",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/signin",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/signup",
+        destination: "/",
+        permanent: false,
+      },
     ];
   },
   turbopack: {

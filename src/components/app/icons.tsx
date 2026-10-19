@@ -262,3 +262,13 @@ export function ClockIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function NewsIcon({ className }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M3.5 5.25h10.5a2 2 0 0 1 2 2v7.5a1.5 1.5 0 0 0 1.5-1.5V7" />
+      <path d="M3.5 5.25v9A1.75 1.75 0 0 0 5.25 16h10.75" />
+      <path d="M6 8.25h6M6 10.75h6M6 13.25h3.5" />
+    </svg>
+  );
+}

@@ -22,6 +22,7 @@ async function RecapDetail({ id }: { id: string }) {
     <div className="mx-auto max-w-2xl">
       <Link
         href="/explore"
+        transitionTypes={["nav-back"]}
         className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"
       >
         <span aria-hidden="true">←</span> Back to Explore

@@ -8,6 +8,7 @@ import { SectionHeading } from "@/components/app/explore/explore-section";
 import { CompassIcon, CommunityIcon } from "@/components/app/icons";
 import { RecapCard } from "@/components/app/recaps/recap-card";
 import { FeedSkeleton } from "@/components/app/skeleton";
+import { EDITORIAL } from "@/lib/editorial/content";
 import {
   useExploreFeed,
   type ExploreSort,
@@ -54,16 +55,41 @@ export function CommunityFeed() {
               description="No public recaps match your search or topic. Try a different symbol or clear the filter."
             />
           ) : (
-            <EmptyState
-              Icon={CompassIcon}
-              title="No public recaps yet"
-              description="When traders publish a recap, it shows up here. Be the first — write a journal entry and set it to public."
-              action={
-                <Link href="/journal">
-                  <Button variant="primary">Write a recap</Button>
-                </Link>
-              }
-            />
+            <>
+              <EmptyState
+                Icon={CompassIcon}
+                title="No public recaps yet"
+                description="When traders publish a recap, it shows up here. Be the first — write a journal entry and set it to public."
+                action={
+                  <Link href="/journal">
+                    <Button variant="primary">Write a recap</Button>
+                  </Link>
+                }
+              />
+              {EDITORIAL.length > 0 ? (
+                <div className="mt-6 border-t border-hairline pt-5">
+                  <p className="text-xs font-semibold tracking-[0.22em] text-faint">
+                    MEANWHILE
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {EDITORIAL.slice(0, 2).map((article) => (
+                      <Link
+                        key={article.slug}
+                        href={`/explore/insights/${article.slug}`}
+                        className="group rounded-xl border border-hairline bg-night/40 p-4 transition-colors hover:border-hairline-strong"
+                      >
+                        <p className="text-sm font-medium text-ink group-hover:text-violet-ink">
+                          {article.title}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-xs text-muted">
+                          {article.summary}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       ) : (

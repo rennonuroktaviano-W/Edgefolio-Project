@@ -93,6 +93,7 @@ function NavLink({
     <li>
       <Link
         href={item.href}
+        transitionTypes={["nav-forward"]}
         aria-current={active ? "page" : undefined}
         onClick={onNavigate}
         title={collapsed ? item.label : undefined}

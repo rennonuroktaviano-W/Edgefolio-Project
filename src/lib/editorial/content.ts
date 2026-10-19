@@ -95,6 +95,66 @@ export const EDITORIAL: readonly EditorialArticle[] = [
       "Keep the review short: what did I plan, what did I do, where did the two diverge, and what single rule fixes the gap. One honest rule, applied and checked, beats a page of good intentions every time.",
     ],
   },
+  {
+    slug: "risk-not-conviction-sets-your-size",
+    title: "Let risk, not conviction, set your size",
+    summary:
+      "The size of a position should follow a rule you set in advance, not how strongly you feel about the trade.",
+    category: "Risk",
+    readingMinutes: 4,
+    date: "2026-07-14",
+    body: [
+      "It is tempting to size up when a setup feels obvious. The feeling is real, but it is not information — the market does not pay out confidence, it pays out being right while surviving being wrong.",
+      "When conviction decides your size, your largest positions cluster around your most emotional trades. Those are exactly the trades where a surprise hurts most, because the loss is magnified by the very confidence that produced it.",
+      "A rule does the opposite. You decide in advance how much you will risk, and the size follows from the distance to your invalidation level. A tight stop allows a larger position; a wide stop requires a smaller one. The rule is indifferent to how you feel.",
+      "This is not about avoiding big positions. It is about earning them the same way every time, so that no single decision can take you out of the game. Risk is the constant; size is the variable you can actually control.",
+    ],
+  },
+  {
+    slug: "sizing-by-volatility",
+    title: "Size by volatility, not by habit",
+    summary:
+      "A fixed share count means your risk changes with the market. Let the instrument's own range decide the size.",
+    category: "Risk",
+    readingMinutes: 5,
+    date: "2026-07-28",
+    body: [
+      "Trading a set number of shares or coins feels tidy, but it quietly makes your risk inconsistent. The same position size means very different exposure in a calm market and a violent one.",
+      "Volatility-based sizing corrects this. Instead of starting from a quantity, you start from the amount you are willing to lose and the distance to the level that proves you wrong. The position is whatever fits between those two numbers.",
+      "In practice this means your size shrinks when the instrument is choppy and can grow when it is calm, always anchored to the same dollar risk. You are not predicting volatility; you are responding to what the chart already shows.",
+      "The payoff is a smoother equity curve. No single wild session can do outsized damage, because the sizing rule quietly refused to let you take an oversized bet in the first place.",
+    ],
+  },
+  {
+    slug: "the-losing-streak-is-normal",
+    title: "A losing streak is normal, not a verdict",
+    summary:
+      "Even a good strategy loses several times in a row. Knowing that in advance is what keeps you from abandoning it at the worst moment.",
+    category: "Psychology",
+    readingMinutes: 4,
+    date: "2026-08-09",
+    body: [
+      "If you win half your trades, a run of six losses is not a rare disaster — it is something you should expect to see several times across a few hundred trades. Streaks of losses are baked into the arithmetic of any edge.",
+      "The danger is not the streak itself; it is what it does to your thinking. After the third loss the temptation is to double down, abandon the plan, or take a trade that has nothing to do with your rules. That reaction, not the streak, is what turns a normal drawdown into a real one.",
+      "Knowing the streak is normal is a form of preparation. If you expect it, it is annoying rather than shocking, and you are far less likely to make a desperate decision in the middle of it.",
+      "The test of a strategy is not whether it avoids losing streaks. It is whether you can keep executing it while one is happening. That is where most edges are either kept or thrown away.",
+    ],
+  },
+  {
+    slug: "is-your-strategy-actually-working",
+    title: "Is your strategy actually working?",
+    summary:
+      "To judge a strategy you need a sample, a baseline, and a rule for what would change your mind — not a feeling after a good week.",
+    category: "Process",
+    readingMinutes: 5,
+    date: "2026-08-12",
+    body: [
+      "After a good week a strategy feels brilliant; after a bad one it feels broken. Neither reaction is a judgment, because a week is not a sample. Judging an edge on a handful of trades is like judging a coin on three flips.",
+      "To evaluate a strategy honestly you need three things. A sample large enough to mean something, a baseline to compare against, and a rule for what result would make you abandon it — decided before you look at the results.",
+      "The baseline matters more than most traders admit. Beating zero is a low bar; you want to know whether the edge is worth the risk you are taking to collect it. A strategy that profits but drains you with drawdowns may not be one you can actually trade.",
+      "Write the criteria down in advance and review on a schedule, not after every loss. That is the difference between evaluating a strategy and reacting to the last thing that happened to you.",
+    ],
+  },
 ];
 
 export function getArticle(slug: string): EditorialArticle | null {
