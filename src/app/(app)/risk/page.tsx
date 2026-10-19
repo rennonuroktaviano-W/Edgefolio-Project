@@ -4,8 +4,8 @@ import { PanelSkeleton } from "@/components/app/skeleton";
 import { RiskContent } from "@/components/app/risk/risk-content";
 
 export const metadata = {
-  title: "Risk Management — Edgefolio",
-  description: "Drawdown, R-multiples, and position-sizing insight from your trades.",
+  title: "Manajemen Risiko — Edgefolio",
+  description: "Drawdown, R-multiple, dan insight sizing posisi dari trade kamu.",
 };
 
 export default function RiskPage() {
@@ -13,8 +13,8 @@ export default function RiskPage() {
     <div>
       <PageHeader
         eyebrow="RISK MANAGEMENT"
-        title="Protect the downside."
-        description="Drawdown, risk per trade, and R-multiple distribution calculated from your own trades and stop losses."
+        title="Kelola risiko dan batas aman."
+        description="Drawdown, risk per trade, dan distribusi R-multiple dari trade kamu."
       />
 
       <Suspense fallback={<PanelSkeleton height="h-96" />}>

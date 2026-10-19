@@ -2,13 +2,26 @@ import { StatCard } from "@/components/app/stat-card";
 import { Badge } from "@/components/app/badge";
 import { EmptyState } from "@/components/app/page-header";
 import { ShieldIcon } from "@/components/app/icons";
-import { computeMetrics, deriveTrades } from "@/lib/analytics/metrics";
+import { computeMetrics, deriveTrades, type DerivedTrade } from "@/lib/analytics/metrics";
 import { listTrades } from "@/lib/trades/queries";
+import { getRiskSettings, EMPTY_RISK_SETTINGS } from "@/lib/risk/queries";
+import type { RiskSettings } from "@/lib/risk/types";
+import {
+  currentDrawdown,
+  maxConsecutiveStreak,
+  openExposure,
+  riskOfRuin,
+  worstDailyLosses,
+} from "@/lib/risk/analytics";
+import { PlanForm } from "@/components/app/risk/plan-form";
+import { PositionCalculator } from "@/components/app/risk/position-calculator";
+import { Scorecard, type ScorecardRow } from "@/components/app/risk/scorecard";
 import {
   formatMoney,
   formatPercent,
   formatR,
   formatRatio,
+  formatDateShort,
 } from "@/lib/trading/format";
 
 const R_BUCKETS = [
@@ -21,17 +34,31 @@ const R_BUCKETS = [
   { label: "> 3R", min: 3, max: Infinity },
 ];
 
+type GroupRisk = {
+  key: string;
+  trades: number;
+  avgRisk: number | null;
+  avgR: number | null;
+  netPnl: number;
+};
+
 export async function RiskContent() {
-  const trades = await listTrades();
+  const [trades, settings] = await Promise.all([
+    listTrades(),
+    getRiskSettings().catch(() => EMPTY_RISK_SETTINGS),
+  ]);
 
   if (trades.length === 0) {
     return (
-      <div className="mt-8 soft-frame rounded-2xl bg-surface-raised p-6 sm:p-8">
-        <EmptyState
-          Icon={ShieldIcon}
-          title="No risk data yet"
-          description="Record a stop loss (and target) on your trades to unlock risk and reward analysis."
-        />
+      <div className="mt-8 space-y-6">
+        <PlanForm initial={settings} />
+        <div className="soft-frame rounded-2xl bg-surface-raised p-6 sm:p-8">
+          <EmptyState
+            Icon={ShieldIcon}
+            title="Belum ada data risiko"
+            description="Catat stop loss (dan target) pada trade kamu untuk membuka analisis risiko."
+          />
+        </div>
       </div>
     );
   }
@@ -62,8 +89,41 @@ export async function RiskContent() {
   const riskPctOfTrades =
     derived.length > 0 ? withStop.length / derived.length : 0;
 
+  const drawdown = currentDrawdown(metrics.equityCurve);
+  const lossStreak = maxConsecutiveStreak(derived, "loss");
+  const winStreak = maxConsecutiveStreak(derived, "win");
+  const dailyLosses = worstDailyLosses(derived, 3);
+  const exposure = openExposure(derived);
+  const payoff =
+    metrics.avgWin !== null && metrics.avgLoss !== null && metrics.avgLoss > 0
+      ? metrics.avgWin / metrics.avgLoss
+      : null;
+  const ruin = riskOfRuin(
+    metrics.winRate,
+    payoff,
+    settings.maxRiskPerTrade,
+    settings.maxDrawdown,
+  );
+
+  const byStrategy = groupRisk(derived, (item) => item.trade.strategy || "Tanpa strategi");
+  const byAsset = groupRisk(derived, (item) => item.trade.symbol);
+
+  const scorecardRows = buildScorecard({
+    settings,
+    metrics,
+    withStop,
+    dailyLosses,
+  });
+
   return (
     <div className="mt-8 space-y-6">
+      <Scorecard rows={scorecardRows} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PositionCalculator settings={settings} />
+        <PlanForm initial={settings} />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Max drawdown"
@@ -71,72 +131,132 @@ export async function RiskContent() {
           hint={
             metrics.maxDrawdownPct === null
               ? "Peak-to-trough"
-              : `${formatPercent(metrics.maxDrawdownPct)} of peak`
+              : `${formatPercent(metrics.maxDrawdownPct)} dari peak`
           }
           tone={metrics.maxDrawdown > 0 ? "negative" : "neutral"}
         />
         <StatCard
-          label="Average R"
+          label="R-rata-rata"
           value={metrics.avgR === null ? "—" : formatR(metrics.avgR)}
-          hint="Mean realised R multiple"
+          hint="Rata-rata R multiple terealisasi"
           tone={metrics.avgR !== null && metrics.avgR >= 0 ? "positive" : "negative"}
         />
         <StatCard
-          label="Largest loss"
+          label="Loss terbesar"
           value={metrics.largestLoss === null ? "—" : formatMoney(metrics.largestLoss)}
-          hint="Worst single trade"
+          hint="Trade tunggal terburuk"
           tone="negative"
         />
         <StatCard
-          label="Trades with a stop"
+          label="Trade dengan stop"
           value={formatPercent(riskPctOfTrades)}
-          hint={`${withStop.length} of ${derived.length}`}
+          hint={`${withStop.length} dari ${derived.length}`}
           tone={riskPctOfTrades >= 0.8 ? "positive" : "neutral"}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
-          <p className="text-sm font-medium text-ink">Risk per trade</p>
+          <p className="text-sm font-medium text-ink">Drawdown & streak</p>
           <p className="mt-1 text-xs text-muted">
-            Average money at risk when a stop loss is recorded.
+            Jarak dari peak equity dan beruntun menang/kalah terpanjang.
           </p>
-          <p className="mt-4 text-3xl font-semibold tracking-tight text-ink">
-            {avgRisk === null ? "—" : formatMoney(avgRisk)}
-          </p>
+
           <dl className="mt-5 space-y-2.5 text-sm">
-            <Line label="Best result" value={bestR === null ? "—" : formatR(bestR)} tone="positive" />
-            <Line label="Worst result" value={worstR === null ? "—" : formatR(worstR)} tone="negative" />
             <Line
-              label="Planned reward / risk"
+              label="Drawdown saat ini"
               value={
-                metrics.avgRewardRisk === null
+                drawdown === null
                   ? "—"
-                  : formatRatio(metrics.avgRewardRisk)
+                  : drawdown.atPeak
+                    ? "Di puncak"
+                    : `−${formatMoney(drawdown.current)}`
               }
+              tone={drawdown !== null && drawdown.atPeak ? "positive" : "negative"}
             />
             <Line
-              label="Expectancy"
-              value={metrics.expectancy === null ? "—" : formatMoney(metrics.expectancy)}
-              tone={metrics.expectancy !== null && metrics.expectancy >= 0 ? "positive" : "negative"}
+              label="Max drawdown tercatat"
+              value={`−${formatMoney(metrics.maxDrawdown)}`}
+              tone="negative"
             />
+            <Line
+              label="Beruntun kalah terpanjang"
+              value={`${lossStreak.length}x`}
+              tone="negative"
+            />
+            <Line
+              label="Beruntun menang terpanjang"
+              value={`${winStreak.length}x`}
+              tone="positive"
+            />
+            <Line
+              label="Risk of ruin (estimasi)"
+              value={
+                ruin.probability === null
+                  ? "—"
+                  : formatPercent(ruin.probability, 1)
+              }
+              tone={ruin.probability !== null && ruin.probability < 0.1 ? "positive" : "negative"}
+            />
+            <Line
+              label="Risiko rata-rata per trade"
+              value={avgRisk === null ? "—" : formatMoney(avgRisk)}
+            />
+            <Line
+              label="R terbaik / terburuk"
+              value={
+                bestR === null || worstR === null
+                  ? "—"
+                  : `${formatR(worstR)} / ${formatR(bestR)}`
+              }
+              tone={worstR !== null && worstR < 0 ? "negative" : "positive"}
+            />
+            {ruin.reason ? (
+              <p className="text-xs text-faint">{ruin.reason}</p>
+            ) : null}
           </dl>
+
+          {dailyLosses.length > 0 ? (
+            <div className="mt-5 border-t border-hairline pt-4">
+              <p className="text-xs font-medium text-muted">Hari loss terburuk</p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {dailyLosses.map((day) => (
+                  <li key={day.date} className="flex items-center justify-between">
+                    <span className="text-muted">{formatDateShort(day.date)}</span>
+                    <span className="text-negative">{formatMoney(day.loss)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="mt-5 border-t border-hairline pt-4">
+            <p className="text-xs font-medium text-muted">Eksposur terbuka</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+              {formatMoney(exposure.total)}
+            </p>
+            <p className="mt-1 text-xs text-faint">
+              Total $ yang berisiko di {exposure.count} posisi terbuka yang
+              punya stop.
+            </p>
+          </div>
         </div>
 
         <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-ink">R-multiple distribution</p>
-              <p className="mt-1 text-xs text-muted">Closed trades by realised R</p>
+              <p className="text-sm font-medium text-ink">Distribusi R-multiple</p>
+              <p className="mt-1 text-xs text-muted">Trade tertutup berdasarkan R</p>
             </div>
             <Badge tone={withoutStop > 0 ? "warning" : "muted"}>
-              {withoutStop} without stop
+              {withoutStop} tanpa stop
             </Badge>
           </div>
 
           {rs.length === 0 ? (
             <p className="mt-6 text-sm text-muted">
-              Add stop losses to express results in R and see this distribution.
+              Tambahkan stop loss untuk mengekspresikan hasil dalam R dan
+              melihat distribusi ini.
             </p>
           ) : (
             <ul className="mt-5 space-y-3">
@@ -163,39 +283,280 @@ export async function RiskContent() {
         </div>
       </div>
 
+      <div className="grid gap-4 lg:grid-cols-2">
+        <RiskBreakdown title="Risiko per strategi" groups={byStrategy} />
+        <RiskBreakdown title="Risiko per aset" groups={byAsset} />
+      </div>
+
       <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
-        <p className="text-sm font-medium text-ink">Position sizing guidance</p>
+        <p className="text-sm font-medium text-ink">Panduan position sizing</p>
         <p className="mt-1 text-xs text-muted">
-          Based on your current max drawdown and average risk per trade.
+          Berdasarkan max drawdown dan rata-rata risiko per trade kamu.
         </p>
         <ul className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
           <li className="rounded-xl border border-hairline bg-night/40 p-3.5">
-            Your largest single loss was{" "}
+            Loss tunggal terbesar kamu{" "}
             <span className="text-ink">
               {metrics.largestLoss === null
                 ? "—"
                 : formatMoney(Math.abs(metrics.largestLoss))}
             </span>
-            . Keeping per-trade risk small relative to your account protects you
-            from a single bad outcome.
+            . Menjaga risiko per trade kecil terhadap akun melindungi kamu dari
+            satu hasil buruk.
           </li>
           <li className="rounded-xl border border-hairline bg-night/40 p-3.5">
-            Your average result per trade is{" "}
+            Hasil rata-rata per trade kamu{" "}
             <span className="text-ink">
               {metrics.expectancy === null
                 ? "—"
                 : formatMoney(metrics.expectancy)}
             </span>
-            . A positive expectancy over a large sample is what compounds.
+            . Ekspektasi positif pada sampel besar yang membuat akun tumbuh.
           </li>
         </ul>
         <p className="mt-4 text-xs text-faint">
-          These are calculated from your records only and are not financial
-          advice.
+          Semua dihitung dari catatan kamu sendiri dan bukan saran finansial.
         </p>
       </div>
     </div>
   );
+}
+
+function groupRisk(
+  items: DerivedTrade[],
+  keyOf: (item: DerivedTrade) => string,
+): GroupRisk[] {
+  const map = new Map<string, GroupRisk>();
+
+  for (const item of items) {
+    const key = keyOf(item);
+    const entry =
+      map.get(key) ?? { key, trades: 0, avgRisk: null, avgR: null, netPnl: 0 };
+    entry.trades += 1;
+    entry.netPnl += item.realizedPnl ?? 0;
+
+    if (item.riskAmount !== null) {
+      entry.avgRisk =
+        entry.avgRisk === null
+          ? item.riskAmount
+          : (entry.avgRisk * (entry.trades - 1) + item.riskAmount) / entry.trades;
+    }
+    if (item.realizedR !== null) {
+      entry.avgR =
+        entry.avgR === null
+          ? item.realizedR
+          : (entry.avgR * (entry.trades - 1) + item.realizedR) / entry.trades;
+    }
+
+    map.set(key, entry);
+  }
+
+  return [...map.values()].sort((a, b) => b.trades - a.trades);
+}
+
+function RiskBreakdown({
+  title,
+  groups,
+}: {
+  title: string;
+  groups: GroupRisk[];
+}) {
+  const shown = groups.slice(0, 6);
+  const maxRisk = Math.max(
+    ...shown.map((group) => Math.abs(group.avgRisk ?? 0)),
+    1,
+  );
+
+  return (
+    <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
+      <p className="text-sm font-medium text-ink">{title}</p>
+      <p className="mt-1 text-xs text-muted">
+        Rata-rata $ yang berisiko per trade, dibandingkan R-rata-rata.
+      </p>
+
+      {shown.length === 0 ? (
+        <p className="mt-6 text-sm text-muted">
+          Belum ada stop loss pada trade untuk membentuk grup.
+        </p>
+      ) : (
+        <ul className="mt-5 space-y-3">
+          {shown.map((group) => (
+            <li key={group.key} className="flex items-center gap-3">
+              <span className="w-28 shrink-0 truncate text-xs text-muted">
+                {group.key}
+              </span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-strong">
+                <div
+                  className="h-full rounded-full bg-accent/70"
+                  style={{
+                    width: `${((group.avgRisk ?? 0) / maxRisk) * 100}%`,
+                  }}
+                />
+              </div>
+              <span className="w-24 shrink-0 text-right text-xs text-ink">
+                {group.avgRisk === null ? "—" : formatMoney(group.avgRisk)}
+              </span>
+              <span className="w-16 shrink-0 text-right text-xs text-faint">
+                {group.avgR === null ? "—" : formatR(group.avgR)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function buildScorecard({
+  settings,
+  metrics,
+  withStop,
+  dailyLosses,
+}: {
+  settings: RiskSettings;
+  metrics: ReturnType<typeof computeMetrics>;
+  withStop: DerivedTrade[];
+  dailyLosses: { date: string; loss: number }[];
+}): ScorecardRow[] {
+  const rows: ScorecardRow[] = [];
+  const equity = settings.accountEquity;
+  const hasEquity = equity !== null && equity > 0;
+
+  const avgRisk =
+    withStop.length > 0
+      ? withStop.reduce((sum, item) => sum + (item.riskAmount ?? 0), 0) /
+        withStop.length
+      : null;
+
+  rows.push(
+    limitRow({
+      label: "Risiko rata-rata per trade",
+      note: "Rata-rata $ risk dibanding equity.",
+      actual: avgRisk === null ? "—" : formatMoney(avgRisk),
+      actualRatio: hasEquity && avgRisk !== null ? avgRisk / equity : null,
+      limit: settings.maxRiskPerTrade,
+      limitLabel:
+        settings.maxRiskPerTrade === null
+          ? "—"
+          : formatPercent(settings.maxRiskPerTrade),
+    }),
+  );
+
+  rows.push(
+    limitRow({
+      label: "Loss terbesar",
+      note: "Satu trade terburuk dibanding equity.",
+      actual:
+        metrics.largestLoss === null ? "—" : formatMoney(metrics.largestLoss),
+      actualRatio:
+        hasEquity && metrics.largestLoss !== null
+          ? Math.abs(metrics.largestLoss) / equity
+          : null,
+      limit: settings.maxDrawdown,
+      limitLabel:
+        settings.maxDrawdown === null ? "—" : formatPercent(settings.maxDrawdown),
+    }),
+  );
+
+  const worstDay = dailyLosses[0];
+  rows.push(
+    limitRow({
+      label: "Hari loss terburuk",
+      note: worstDay ? formatDateShort(worstDay.date) : "Belum ada hari loss.",
+      actual: worstDay ? formatMoney(worstDay.loss) : "—",
+      actualRatio:
+        hasEquity && worstDay ? Math.abs(worstDay.loss) / equity : null,
+      limit: settings.maxDailyLoss,
+      limitLabel:
+        settings.maxDailyLoss === null
+          ? "—"
+          : formatPercent(settings.maxDailyLoss),
+    }),
+  );
+
+  rows.push(
+    limitRow({
+      label: "Posisi terbuka",
+      note: "Jumlah trade berstatus open saat ini.",
+      actual: String(metrics.openTrades),
+      actualRatio: null,
+      actualCount: metrics.openTrades,
+      limit: settings.maxOpenPositions,
+      limitLabel:
+        settings.maxOpenPositions === null
+          ? "—"
+          : String(settings.maxOpenPositions),
+      compareCount: true,
+    }),
+  );
+
+  rows.push(
+    limitRow({
+      label: "Reward / risk direncanakan",
+      note: "Rata-rata planned R:R dari trade yang punya stop dan target.",
+      actual:
+        metrics.avgRewardRisk === null ? "—" : formatRatio(metrics.avgRewardRisk),
+      actualRatio: null,
+      actualValue: metrics.avgRewardRisk,
+      limit: settings.minRewardRisk,
+      limitLabel:
+        settings.minRewardRisk === null
+          ? "—"
+          : formatRatio(settings.minRewardRisk),
+      compareMin: true,
+    }),
+  );
+
+  return rows;
+}
+
+function limitRow({
+  label,
+  note,
+  actual,
+  actualRatio,
+  actualCount,
+  actualValue,
+  limit,
+  limitLabel,
+  compareCount,
+  compareMin,
+}: {
+  label: string;
+  note?: string;
+  actual: string;
+  actualRatio: number | null;
+  actualCount?: number;
+  actualValue?: number | null;
+  limit: number | null;
+  limitLabel: string;
+  compareCount?: boolean;
+  compareMin?: boolean;
+}): ScorecardRow {
+  if (limit === null) {
+    return { label, note, actual, limit: limitLabel, status: "skip" };
+  }
+
+  let pass: boolean | null = null;
+  if (compareCount && actualCount !== undefined) {
+    pass = actualCount <= limit;
+  } else if (compareMin) {
+    pass = actualValue === null || actualValue === undefined ? null : actualValue >= limit;
+  } else if (actualRatio !== null) {
+    pass = actualRatio <= limit;
+  }
+
+  if (pass === null) {
+    return { label, note, actual, limit: limitLabel, status: "skip" };
+  }
+
+  return {
+    label,
+    note,
+    actual,
+    limit: limitLabel,
+    status: pass ? "pass" : "fail",
+  };
 }
 
 function Line({
@@ -224,3 +585,4 @@ function Line({
     </div>
   );
 }
+
