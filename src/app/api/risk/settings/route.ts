@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { clientIp, isRateLimited } from "@/lib/auth/rate-limit";
-import { EMPTY_RISK_SETTINGS, getRiskSettings, upsertRiskSettings } from "@/lib/risk/queries";
+import { getRiskSettings, saveRiskSettings } from "@/lib/risk/queries";
 import { validateRiskSettings } from "@/lib/risk/validate";
 
 export async function GET() {
@@ -46,10 +46,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "You need to sign in first." }, { status: 401 });
   }
 
-  const settings = await upsertRiskSettings(
-    { ...EMPTY_RISK_SETTINGS, ...parsed.value },
-    user.id,
-  );
+  const settings = await saveRiskSettings(parsed.value, user);
 
   if (!settings) {
     return Response.json(

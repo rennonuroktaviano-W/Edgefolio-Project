@@ -2,93 +2,108 @@ import "server-only";
 
 import { io } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { RiskSettings } from "@/lib/risk/types";
+import type { RiskSettings, RiskSettingsInput } from "@/lib/risk/types";
 
-type RiskSettingsRow = {
-  user_id: string;
-  account_equity: number | string | null;
-  max_risk_per_trade: number | string | null;
-  max_daily_loss: number | string | null;
-  max_drawdown: number | string | null;
-  min_reward_risk: number | string | null;
-  max_open_positions: number | string | null;
+// The risk plan is a per-user settings blob. Rather than a table + RLS, it
+// lives in the auth user's `user_metadata` alongside `display_name`/`username`
+// — already the established pattern in this codebase. It is readable and
+// writable only by the owner (via their own session), needs no migration, and
+// is small enough to be a single field.
+const PLAN_KEY = "risk_plan";
+
+type PlanBlob = Partial<Record<keyof RiskSettingsInput, number | null>>;
+
+type AuthUser = {
+  id: string;
+  user_metadata: Record<string, unknown> | null;
 };
 
-function num(value: number | string | null): number | null {
-  if (value === null || value === undefined) return null;
+function empty(userId: string | null = null): RiskSettings {
+  return {
+    userId,
+    accountEquity: null,
+    maxRiskPerTrade: null,
+    maxDailyLoss: null,
+    maxDrawdown: null,
+    minRewardRisk: null,
+    maxOpenPositions: null,
+  };
+}
+
+function num(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function toSettings(row: RiskSettingsRow): RiskSettings {
+function readPlan(metadata: Record<string, unknown> | null, userId: string): RiskSettings {
+  const blob = metadata?.[PLAN_KEY];
+  if (!blob || typeof blob !== "object") return empty(userId);
+
+  const plan = blob as PlanBlob;
   return {
-    userId: row.user_id,
-    accountEquity: num(row.account_equity),
-    maxRiskPerTrade: num(row.max_risk_per_trade),
-    maxDailyLoss: num(row.max_daily_loss),
-    maxDrawdown: num(row.max_drawdown),
-    minRewardRisk: num(row.min_reward_risk),
-    maxOpenPositions: num(row.max_open_positions),
+    userId,
+    accountEquity: num(plan.accountEquity),
+    maxRiskPerTrade: num(plan.maxRiskPerTrade),
+    maxDailyLoss: num(plan.maxDailyLoss),
+    maxDrawdown: num(plan.maxDrawdown),
+    minRewardRisk: num(plan.minRewardRisk),
+    maxOpenPositions: num(plan.maxOpenPositions),
   };
 }
 
-export const EMPTY_RISK_SETTINGS: RiskSettings = {
-  userId: null,
-  accountEquity: null,
-  maxRiskPerTrade: null,
-  maxDailyLoss: null,
-  maxDrawdown: null,
-  minRewardRisk: null,
-  maxOpenPositions: null,
-};
+function toBlob(input: RiskSettingsInput): PlanBlob {
+  return {
+    accountEquity: input.accountEquity,
+    maxRiskPerTrade: input.maxRiskPerTrade,
+    maxDailyLoss: input.maxDailyLoss,
+    maxDrawdown: input.maxDrawdown,
+    minRewardRisk: input.minRewardRisk,
+    maxOpenPositions: input.maxOpenPositions,
+  };
+}
 
 export async function getRiskSettings(): Promise<RiskSettings> {
   // Mark the dynamic boundary before Supabase reads the session: the library's
   // internal token-expiry `Date.now()` check must run at request time, not while
   // prerendering the static shell (required with cacheComponents enabled).
-  await io();
-  const supabase = await createClient();
-  if (!supabase) return EMPTY_RISK_SETTINGS;
+  try {
+    await io();
+    const supabase = await createClient();
+    if (!supabase) return empty();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return EMPTY_RISK_SETTINGS;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return empty();
 
-  const { data, error } = await supabase
-    .from("risk_settings")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error || !data) return EMPTY_RISK_SETTINGS;
-  return toSettings(data as RiskSettingsRow);
+    return readPlan(user.user_metadata ?? null, user.id);
+  } catch {
+    return empty();
+  }
 }
 
-export async function upsertRiskSettings(
-  input: RiskSettings,
-  userId: string,
+// We rebuild the whole `user_metadata` object here instead of relying on how
+// GoTrue treats a partial `data` payload, so other fields (`display_name`,
+// `username`) are always preserved.
+export async function saveRiskSettings(
+  input: RiskSettingsInput,
+  user: AuthUser,
 ): Promise<RiskSettings | null> {
-  const supabase = await createClient();
-  if (!supabase) return null;
+  try {
+    const supabase = await createClient();
+    if (!supabase) return null;
 
-  const { data, error } = await supabase
-    .from("risk_settings")
-    .upsert(
-      {
-        user_id: userId,
-        account_equity: input.accountEquity,
-        max_risk_per_trade: input.maxRiskPerTrade,
-        max_daily_loss: input.maxDailyLoss,
-        max_drawdown: input.maxDrawdown,
-        min_reward_risk: input.minRewardRisk,
-        max_open_positions: input.maxOpenPositions,
-      },
-      { onConflict: "user_id" },
-    )
-    .select("*")
-    .single();
+    const merged: Record<string, unknown> = {
+      ...(user.user_metadata ?? {}),
+      [PLAN_KEY]: toBlob(input),
+    };
 
-  if (error || !data) return null;
-  return toSettings(data as RiskSettingsRow);
+    const { error } = await supabase.auth.updateUser({ data: merged });
+    if (error) return null;
+
+    return readPlan(merged, user.id);
+  } catch {
+    return null;
+  }
 }

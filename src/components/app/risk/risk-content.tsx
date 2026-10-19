@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/app/page-header";
 import { ShieldIcon } from "@/components/app/icons";
 import { computeMetrics, deriveTrades, type DerivedTrade } from "@/lib/analytics/metrics";
 import { listTrades } from "@/lib/trades/queries";
-import { getRiskSettings, EMPTY_RISK_SETTINGS } from "@/lib/risk/queries";
+import { getRiskSettings } from "@/lib/risk/queries";
 import type { RiskSettings } from "@/lib/risk/types";
 import {
   currentDrawdown,
@@ -45,7 +45,7 @@ type GroupRisk = {
 export async function RiskContent() {
   const [trades, settings] = await Promise.all([
     listTrades(),
-    getRiskSettings().catch(() => EMPTY_RISK_SETTINGS),
+    getRiskSettings(),
   ]);
 
   if (trades.length === 0) {
