@@ -78,8 +78,9 @@ export function EconomicCalendar({ events }: { events: EconomicEvent[] }) {
           <div>
             <p className="text-sm font-medium text-ink">Kalender minggu ini</p>
             <p className="mt-1 text-xs text-muted">
-              Data asli dari feed Forex Factory. Kami hanya menampilkan event
-              yang benar-benar ada di sana.
+              Data asli dari feed Forex Factory, ditampilkan dalam WIB
+              (Asia/Jakarta). Kami hanya menampilkan event yang benar-benar ada
+              di sana.
             </p>
           </div>
           {next ? (

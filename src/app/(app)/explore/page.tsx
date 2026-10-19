@@ -46,7 +46,11 @@ function weekRangeLabel(now: Date): string {
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   const fmt = (value: Date) =>
-    value.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    value.toLocaleDateString("en-US", {
+      timeZone: "Asia/Jakarta",
+      month: "short",
+      day: "numeric",
+    });
   return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
 }
 

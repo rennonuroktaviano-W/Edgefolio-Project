@@ -2,6 +2,18 @@ import type { RiskSettingsInput } from "@/lib/risk/types";
 
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: string; field: string };
 
+// The settings payload has exactly these fields. Anything else is a client bug,
+// and silently dropping it would answer "saved" while writing an empty plan
+// over the user's real one.
+const KNOWN_FIELDS = new Set([
+  "accountEquity",
+  "maxRiskPerTrade",
+  "maxDailyLoss",
+  "maxDrawdown",
+  "minRewardRisk",
+  "maxOpenPositions",
+]);
+
 function optionalNumber(
   raw: unknown,
 ): { ok: true; value: number | null } | { ok: false } {
@@ -33,6 +45,15 @@ export function validateRiskSettings(
   payload: unknown,
 ): Parsed<RiskSettingsInput> {
   const body = (payload ?? {}) as Record<string, unknown>;
+
+  const unknown = Object.keys(body).find((key) => !KNOWN_FIELDS.has(key));
+  if (unknown) {
+    return {
+      ok: false,
+      error: `Unexpected field: ${unknown}.`,
+      field: unknown,
+    };
+  }
 
   const equity = optionalNumber(body.accountEquity);
   if (!equity.ok) {

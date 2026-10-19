@@ -67,18 +67,26 @@ export function formatRatio(value: number): string {
   return `${formatNumber(value, 2)}`;
 }
 
+// Dates are pinned to Asia/Jakarta so the server render (UTC) and the
+// browser's local render always agree — React reports any difference between
+// the two as a hydration mismatch.
+const TIME_ZONE = "Asia/Jakarta";
+
 const DATE = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
   month: "short",
   day: "numeric",
   year: "numeric",
 });
 
 const DATE_SHORT = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
   month: "short",
   day: "numeric",
 });
 
 const DATE_TIME = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
   month: "short",
   day: "numeric",
   year: "numeric",

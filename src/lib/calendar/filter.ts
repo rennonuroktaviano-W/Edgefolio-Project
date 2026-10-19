@@ -6,6 +6,13 @@ import type { EconomicEvent, EventImpact } from "@/lib/calendar/types";
 export type CurrencyScope = "USD" | "ALL";
 export type ImpactScope = "core" | "all";
 
+// Every date in this module is rendered on the server (UTC) and read back by
+// the browser (the viewer's machine). Without a pinned zone the calendar day,
+// the day groups and the printed times would disagree between the two, which
+// React reports as a hydration mismatch. Everything below therefore renders in
+// Asia/Jakarta on both sides.
+const TIME_ZONE = "Asia/Jakarta";
+
 export const CORE_IMPACTS: readonly EventImpact[] = ["high", "medium"];
 export const ALL_IMPACTS: readonly EventImpact[] = [
   "high",
@@ -30,15 +37,21 @@ export function filterEvents(
   });
 }
 
-// Calendar day in the viewer's local time zone (YYYY-MM-DD, sortable).
+// Calendar day in Asia/Jakarta (YYYY-MM-DD, sortable) — built with a pinned
+// zone rather than getDate()/getMonth(), which resolve in the local zone.
+const KEY_FORMAT = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function dayKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return KEY_FORMAT.format(date);
 }
 
 const DAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
+  timeZone: TIME_ZONE,
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -46,6 +59,7 @@ const DAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
 });
 
 const TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
+  timeZone: TIME_ZONE,
   hour: "2-digit",
   minute: "2-digit",
 });
