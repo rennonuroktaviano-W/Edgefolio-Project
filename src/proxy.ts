@@ -8,6 +8,7 @@ import { createServerClient } from "@supabase/ssr";
 // Every authenticated app route. Keep in sync with the sidebar navigation.
 const APP_ROUTE_PREFIXES = [
   "/explore",
+  "/economic-calendar",
   "/community",
   "/leaderboard",
   "/dashboard",

@@ -10,6 +10,7 @@ import { markAppSession } from "@/lib/auth/app-session";
 import {
   AnalyticsIcon,
   CalendarIcon,
+  ClockIcon,
   CloseIcon,
   CommunityIcon,
   CompassIcon,
@@ -40,6 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Discover",
     items: [
       { label: "Explore", href: "/explore", Icon: CompassIcon },
+      { label: "Economic Calendar", href: "/economic-calendar", Icon: ClockIcon },
       { label: "Community", href: "/community", Icon: CommunityIcon },
       { label: "Leaderboard", href: "/leaderboard", Icon: LeaderboardIcon },
     ],
