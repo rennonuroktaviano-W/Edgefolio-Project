@@ -26,16 +26,6 @@ export function CompassIcon({ className }: IconProps) {
   );
 }
 
-export function JournalIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M5 3.5h8.5A1.5 1.5 0 0 1 15 5v11.5H6.5A1.5 1.5 0 0 1 5 15z" />
-      <path d="M5 14.5A1.5 1.5 0 0 1 6.5 13H15" />
-      <path d="M8 7h4.5M8 9.75h3" />
-    </svg>
-  );
-}
-
 export function CalendarIcon({ className }: IconProps) {
   return (
     <svg {...svgProps(className)}>

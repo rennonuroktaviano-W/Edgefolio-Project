@@ -10,7 +10,6 @@ const APP_ROUTE_PREFIXES = [
   "/explore",
   "/economic-calendar",
   "/dashboard",
-  "/journal",
   "/trades",
   "/analytics",
   "/calendar",

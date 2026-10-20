@@ -14,7 +14,6 @@ import {
   CloseIcon,
   CompassIcon,
   DashboardIcon,
-  JournalIcon,
   MenuIcon,
   PanelIcon,
   SettingsIcon,
@@ -45,7 +44,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: "My Workspace",
     items: [
       { label: "My Dashboard", href: "/dashboard", Icon: DashboardIcon },
-      { label: "Journal", href: "/journal", Icon: JournalIcon },
       { label: "Trades", href: "/trades", Icon: TradesIcon },
       { label: "Analytics", href: "/analytics", Icon: AnalyticsIcon },
       { label: "Calendar", href: "/calendar", Icon: CalendarIcon },
