@@ -46,7 +46,7 @@ export function TradingPsychology() {
         <Reveal delay={140}>
           <div className="soft-frame rounded-2xl bg-surface p-6 sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium text-ink">Journal entry</p>
+              <p className="text-sm font-medium text-ink">Trade log entry</p>
               <span className="text-xs text-muted">Mar 14 · EURUSD</span>
             </div>
 

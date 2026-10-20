@@ -3,14 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TextField } from "@/components/auth/auth-fields";
-import {
-  NumberField,
-  SegmentedControl,
-  TextAreaField,
-} from "@/components/app/form";
+import { NumberField, SegmentedControl, TextAreaField } from "@/components/app/form";
 import { Button } from "@/components/app/button";
 import { Message } from "@/components/auth/auth-fields";
-import type { Trade, TradeDirection, TradeStatus } from "@/lib/trades/types";
+import type { Trade, TradeDirection, TradeOutcome } from "@/lib/trades/types";
 
 export function toLocalInput(iso: string | null): string {
   const date = iso ? new Date(iso) : new Date();
@@ -45,21 +41,11 @@ export function TradeForm({
   const [direction, setDirection] = useState<TradeDirection>(
     trade?.direction ?? "long",
   );
-  const [status, setStatus] = useState<TradeStatus>(trade?.status ?? "closed");
-  const [entryPrice, setEntryPrice] = useState(
-    numberOrEmpty(trade?.entryPrice ?? null),
+  const [quantity, setQuantity] = useState(trade?.quantity ?? "");
+  const [plannedRR, setPlannedRR] = useState(
+    numberOrEmpty(trade?.plannedRR ?? null),
   );
-  const [exitPrice, setExitPrice] = useState(
-    numberOrEmpty(trade?.exitPrice ?? null),
-  );
-  const [quantity, setQuantity] = useState(
-    numberOrEmpty(trade?.quantity ?? null),
-  );
-  const [stopLoss, setStopLoss] = useState(numberOrEmpty(trade?.stopLoss ?? null));
-  const [takeProfit, setTakeProfit] = useState(
-    numberOrEmpty(trade?.takeProfit ?? null),
-  );
-  const [fees, setFees] = useState(numberOrEmpty(trade?.fees ?? 0));
+  const [outcome, setOutcome] = useState<TradeOutcome>(trade?.outcome ?? "win");
   const [strategy, setStrategy] = useState(trade?.strategy ?? "");
   const [openedAt, setOpenedAt] = useState(toLocalInput(trade?.openedAt ?? null));
   const [closedAt, setClosedAt] = useState(
@@ -77,16 +63,12 @@ export function TradeForm({
     const payload = {
       symbol,
       direction,
-      status,
-      entryPrice,
-      exitPrice: status === "closed" ? exitPrice : null,
       quantity,
-      stopLoss: stopLoss || null,
-      takeProfit: takeProfit || null,
-      fees: fees || 0,
+      plannedRR: plannedRR || null,
+      outcome,
       strategy,
       openedAt: fromLocalInput(openedAt),
-      closedAt: status === "closed" ? fromLocalInput(closedAt) : null,
+      closedAt: fromLocalInput(closedAt),
       notes,
     };
 
@@ -128,85 +110,49 @@ export function TradeForm({
         />
         <div>
           <p className="mb-1.5 text-xs font-medium text-muted">Direction</p>
-          <div className="flex gap-3">
-            <SegmentedControl
-              label="Direction"
-              value={direction}
-              onChange={setDirection}
-              options={[
-                { value: "long", label: "Long" },
-                { value: "short", label: "Short" },
-              ]}
-            />
-            <SegmentedControl
-              label="Status"
-              value={status}
-              onChange={setStatus}
-              options={[
-                { value: "open", label: "Open" },
-                { value: "closed", label: "Closed" },
-              ]}
-            />
-          </div>
+          <SegmentedControl
+            label="Direction"
+            value={direction}
+            onChange={setDirection}
+            options={[
+              { value: "long", label: "Long" },
+              { value: "short", label: "Short" },
+            ]}
+          />
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <NumberField
-          id="trade-entry"
-          label="Entry price"
-          value={entryPrice}
-          onChange={setEntryPrice}
-          placeholder="0.00"
-          min="0"
-        />
-        {status === "closed" ? (
-          <NumberField
-            id="trade-exit"
-            label="Exit price"
-            value={exitPrice}
-            onChange={setExitPrice}
-            placeholder="0.00"
-            min="0"
-          />
-        ) : (
-          <div className="hidden sm:block" />
-        )}
-        <NumberField
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextField
           id="trade-quantity"
-          label="Quantity / size"
+          label="Size (with unit)"
           value={quantity}
           onChange={setQuantity}
-          placeholder="0"
+          placeholder="e.g. $100 or 0.5 SOL"
+          autoComplete="off"
+          hint="The number is the $ you risk on this trade."
+        />
+        <NumberField
+          id="trade-rr"
+          label="Reward / risk"
+          value={plannedRR}
+          onChange={setPlannedRR}
+          placeholder="e.g. 2"
           min="0"
+          hint="Planned multiple, e.g. 2 = you aim for 2× what you risk."
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <NumberField
-          id="trade-stop"
-          label="Stop loss"
-          value={stopLoss}
-          onChange={setStopLoss}
-          placeholder="Optional"
-          min="0"
-          hint="Used to compute risk (R)."
-        />
-        <NumberField
-          id="trade-target"
-          label="Take profit"
-          value={takeProfit}
-          onChange={setTakeProfit}
-          placeholder="Optional"
-          min="0"
-        />
-        <NumberField
-          id="trade-fees"
-          label="Fees"
-          value={fees}
-          onChange={setFees}
-          placeholder="0.00"
-          min="0"
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-muted">Result</p>
+        <SegmentedControl
+          label="Result"
+          value={outcome}
+          onChange={setOutcome}
+          options={[
+            { value: "win", label: "Profit" },
+            { value: "lose", label: "Lose" },
+          ]}
         />
       </div>
 
@@ -235,23 +181,21 @@ export function TradeForm({
               className="w-full rounded-xl border border-hairline bg-night/60 px-3.5 py-3 text-sm text-ink outline-none focus:border-accent/70 focus:ring-2 focus:ring-accent/20"
             />
           </div>
-          {status === "closed" ? (
-            <div>
-              <label
-                htmlFor="trade-closed"
-                className="mb-1.5 block text-xs font-medium text-muted"
-              >
-                Closed
-              </label>
-              <input
-                id="trade-closed"
-                type="datetime-local"
-                value={closedAt}
-                onChange={(event) => setClosedAt(event.target.value)}
-                className="w-full rounded-xl border border-hairline bg-night/60 px-3.5 py-3 text-sm text-ink outline-none focus:border-accent/70 focus:ring-2 focus:ring-accent/20"
-              />
-            </div>
-          ) : null}
+          <div>
+            <label
+              htmlFor="trade-closed"
+              className="mb-1.5 block text-xs font-medium text-muted"
+            >
+              Closed
+            </label>
+            <input
+              id="trade-closed"
+              type="datetime-local"
+              value={closedAt}
+              onChange={(event) => setClosedAt(event.target.value)}
+              className="w-full rounded-xl border border-hairline bg-night/60 px-3.5 py-3 text-sm text-ink outline-none focus:border-accent/70 focus:ring-2 focus:ring-accent/20"
+            />
+          </div>
         </div>
       </div>
 

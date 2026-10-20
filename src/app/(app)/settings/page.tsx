@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
         <PlaceholderCard
           title="Privacy"
-          description="Your journal, trades, and private notes are never public."
+          description="Your trades and private notes are never public."
         />
       </div>
     </div>

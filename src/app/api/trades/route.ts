@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !data) {
+    console.error("[trades:insert]", error?.message ?? "no data returned");
     return Response.json(
       { error: "We could not save this trade. Please try again." },
       { status: 500 },

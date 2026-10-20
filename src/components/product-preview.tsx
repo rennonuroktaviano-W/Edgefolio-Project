@@ -91,7 +91,7 @@ export function ProductPreview() {
           A clearer view of your trading.
         </h2>
         <p className="mt-4 text-pretty text-base text-muted">
-          Review performance at a glance with a journal built for deliberate
+          Review performance at a glance with a trade log built for deliberate
           decisions.
         </p>
       </Reveal>

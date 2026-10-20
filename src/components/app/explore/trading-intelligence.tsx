@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/app/badge";
 import { SectionHeading } from "@/components/app/explore/explore-section";
-import { ClockIcon, JournalIcon } from "@/components/app/icons";
+import { ClockIcon, StarIcon } from "@/components/app/icons";
 import { EDITORIAL } from "@/lib/editorial/content";
 import { formatDate } from "@/lib/trading/format";
 
@@ -9,7 +9,7 @@ export function TradingIntelligence() {
   return (
     <section aria-label="Trading intelligence" className="space-y-4">
       <SectionHeading
-        Icon={JournalIcon}
+        Icon={StarIcon}
         iconTone="violet"
         title="Trading intelligence"
         description="Editorial notes on process, psychology, and risk — clearly labeled, never market signals."

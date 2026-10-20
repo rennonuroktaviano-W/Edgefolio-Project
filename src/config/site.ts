@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Edgefolio",
-  eyebrow: "TRADING JOURNAL, REDEFINED",
+  eyebrow: "TRADE LOG, REDEFINED",
   headline: "Your Trading Edge Starts Here.",
   description:
     "Track your trades, understand your performance, and make every decision more intentional.",

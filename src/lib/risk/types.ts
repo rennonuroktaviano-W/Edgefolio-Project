@@ -5,7 +5,6 @@ export type RiskSettings = {
   maxDailyLoss: number | null;
   maxDrawdown: number | null;
   minRewardRisk: number | null;
-  maxOpenPositions: number | null;
 };
 
 export type RiskSettingsInput = Omit<RiskSettings, "userId">;

@@ -46,7 +46,6 @@ export function CalendarView({
     const map = new Map<string, { netPnl: number; count: number }>();
     for (const trade of trades) {
       const derived = deriveTrade(trade);
-      if (derived.realizedPnl === null) continue;
       const date = trade.closedAt ?? trade.openedAt;
       const key = date.slice(0, 10);
       const bucket = map.get(key) ?? { netPnl: 0, count: 0 };
@@ -90,7 +89,7 @@ export function CalendarView({
         <EmptyState
           Icon={CalendarIcon}
           title="No calendar data yet"
-          description="Your monthly P/L calendar is built from your closed trades. Log trades to populate it."
+          description="Your monthly P/L calendar is built from your trades. Log trades to populate it."
         />
       </div>
     );

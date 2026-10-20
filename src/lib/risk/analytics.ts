@@ -56,18 +56,16 @@ export type Streak = {
   startIndex: number;
 };
 
-// Longest run of consecutive losses (or wins) over closed trades in time order.
+// Longest run of consecutive losses (or wins) over trades in time order.
 export function maxConsecutiveStreak(
   items: DerivedTrade[],
   kind: "win" | "loss",
 ): Streak {
-  const ordered = [...items]
-    .filter((item) => item.realizedPnl !== null)
-    .sort((a, b) => {
-      const da = closedDate(a.trade)?.getTime() ?? 0;
-      const db = closedDate(b.trade)?.getTime() ?? 0;
-      return da - db;
-    });
+  const ordered = [...items].sort((a, b) => {
+    const da = closedDate(a.trade)?.getTime() ?? 0;
+    const db = closedDate(b.trade)?.getTime() ?? 0;
+    return da - db;
+  });
 
   let best = 0;
   let bestStart = 0;
@@ -76,8 +74,7 @@ export function maxConsecutiveStreak(
 
   for (let i = 0; i < ordered.length; i += 1) {
     const item = ordered[i];
-    const isMatch =
-      kind === "win" ? item.realizedPnl! > 0 : item.realizedPnl! < 0;
+    const isMatch = kind === "win" ? item.realizedPnl > 0 : item.realizedPnl < 0;
 
     if (isMatch) {
       if (current === 0) currentStart = i;
@@ -104,7 +101,6 @@ export function worstDailyLosses(
   const map = new Map<string, number>();
 
   for (const item of items) {
-    if (item.realizedPnl === null) continue;
     const date = closedDate(item.trade);
     if (!date) continue;
     const key = dayKey(date);
@@ -179,18 +175,3 @@ export function riskOfRuin(
   return { probability: Math.min(1, Math.max(0, probability)), reason: null };
 }
 
-// Aggregate $ risk currently open (trades still open that carry a stop loss).
-export function openExposure(items: DerivedTrade[]): {
-  total: number;
-  count: number;
-} {
-  let total = 0;
-  let count = 0;
-  for (const item of items) {
-    if (item.trade.status !== "open") continue;
-    if (item.riskAmount === null) continue;
-    total += item.riskAmount;
-    count += 1;
-  }
-  return { total, count };
-}

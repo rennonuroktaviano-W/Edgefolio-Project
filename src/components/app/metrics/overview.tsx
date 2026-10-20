@@ -30,19 +30,19 @@ export function MetricsGrid({ metrics }: { metrics: Metrics }) {
       <StatCard
         label="Net performance"
         value={formatSignedMoney(metrics.netPnl)}
-        hint={`${metrics.closedTrades} closed trade${metrics.closedTrades === 1 ? "" : "s"}`}
+        hint={`${metrics.totalTrades} trade${metrics.totalTrades === 1 ? "" : "s"}`}
         tone={pnlTone(metrics.netPnl)}
       />
       <StatCard
         label="Win rate"
         value={metrics.winRate === null ? "—" : formatPercent(metrics.winRate)}
-        hint={`${metrics.wins}W · ${metrics.losses}L · ${metrics.breakeven}BE`}
+        hint={`${metrics.wins}W · ${metrics.losses}L`}
         tone={winTone}
       />
       <StatCard
         label="Total trades"
         value={String(metrics.totalTrades)}
-        hint={`${metrics.openTrades} open`}
+        hint="All trades logged"
       />
       <StatCard
         label="Avg. reward / risk"
@@ -56,7 +56,7 @@ export function MetricsGrid({ metrics }: { metrics: Metrics }) {
 export function EquityPanel({
   metrics,
   title = "Equity curve",
-  subtitle = "Cumulative realised P/L from closed trades",
+  subtitle = "Cumulative realised P/L",
 }: {
   metrics: Metrics;
   title?: string;
@@ -78,8 +78,8 @@ export function EquityPanel({
         ) : (
           <EmptyState
             compact
-            title="Not enough closed trades"
-            description="Close at least two trades to plot your equity curve."
+            title="Not enough trades"
+            description="Log at least two trades to plot your equity curve."
           />
         )}
       </div>
@@ -92,18 +92,13 @@ export function WinLossPanel({ metrics }: { metrics: Metrics }) {
   return (
     <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
       <p className="text-sm font-medium text-ink">Wins vs losses</p>
-      <p className="mt-1 text-xs text-muted">Across {decided} decided trades</p>
+      <p className="mt-1 text-xs text-muted">Across {decided} trades</p>
 
       <div className="mt-6">
-        <WinLossBar
-          wins={metrics.wins}
-          losses={metrics.losses}
-          breakeven={metrics.breakeven}
-        />
+        <WinLossBar wins={metrics.wins} losses={metrics.losses} />
         <dl className="mt-5 space-y-2.5 text-sm">
           <Row label="Wins" value={String(metrics.wins)} tone="positive" />
           <Row label="Losses" value={String(metrics.losses)} tone="negative" />
-          <Row label="Breakeven" value={String(metrics.breakeven)} />
           <Row
             label="Avg. win"
             value={metrics.avgWin === null ? "—" : formatMoney(metrics.avgWin)}
@@ -168,7 +163,7 @@ export function BreakdownPanel({
       ) : (
         <ul className="mt-5 space-y-4">
           {groups.slice(0, 6).map((group) => {
-            const total = groups.reduce((sum, g) => sum + g.closed, 0) || 1;
+            const total = groups.reduce((sum, g) => sum + g.trades, 0) || 1;
             return (
               <li key={group.key}>
                 <div className="flex items-center justify-between gap-3 text-sm">
@@ -188,7 +183,7 @@ export function BreakdownPanel({
                         group.netPnl >= 0 ? "bg-positive/70" : "bg-negative/70"
                       }`}
                       style={{
-                        width: `${Math.max(6, (group.closed / total) * 100)}%`,
+                        width: `${Math.max(6, (group.trades / total) * 100)}%`,
                       }}
                     />
                   </div>
@@ -225,7 +220,7 @@ export function PeriodPanel({
       <p className="mt-1 text-xs text-muted">{subtitle}</p>
       <div className="mt-6">
         {buckets.length === 0 ? (
-          <p className="text-sm text-muted">No closed trades in this range yet.</p>
+          <p className="text-sm text-muted">No trades in this range yet.</p>
         ) : (
           <PeriodBars buckets={buckets} labelFormatter={labelFormatter} />
         )}
@@ -288,22 +283,18 @@ export function RecentTrades({
                       {formatDate(trade.openedAt)}
                     </td>
                     <td className="px-5 py-3.5 text-sm sm:px-6">
-                      {derived.realizedPnl === null ? (
-                        <Badge tone="info">Open</Badge>
-                      ) : (
-                        <span
-                          className={
-                            derived.realizedPnl >= 0
-                              ? "text-positive"
-                              : "text-negative"
-                          }
-                        >
-                          {formatSignedMoney(derived.realizedPnl)}
-                        </span>
-                      )}
+                      <span
+                        className={
+                          derived.realizedPnl >= 0
+                            ? "text-positive"
+                            : "text-negative"
+                        }
+                      >
+                        {formatSignedMoney(derived.realizedPnl)}
+                      </span>
                     </td>
                     <td className="px-5 py-3.5 text-sm text-muted sm:px-6">
-                      {derived.realizedR === null ? "—" : formatR(derived.realizedR)}
+                      {formatR(derived.realizedR)}
                     </td>
                   </tr>
                 );

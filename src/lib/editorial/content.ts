@@ -39,13 +39,13 @@ export const EDITORIAL: readonly EditorialArticle[] = [
     slug: "write-it-down-before-the-exit",
     title: "Write it down before the exit",
     summary:
-      "A journal entry written before the exit is worth ten written after. Capture the thesis while the pressure is real.",
+      "A trade log entry written before the exit is worth ten written after. Capture the thesis while the pressure is real.",
     category: "Psychology",
     readingMinutes: 3,
     date: "2026-05-20",
     body: [
       "Memory is a storyteller, not a recorder. Once a trade closes, your brain quietly rewrites the reasoning to match the result. Wins become obvious in hindsight; losses become unlucky. The note you write after the fact is rarely the note you would have written in the moment.",
-      "That is why the most valuable journal entry is the one you write while the position is still open. In that window the outcome is unknown, the emotions are live, and your reasoning is honest — because you cannot yet know which parts to excuse.",
+      "That is why the most valuable trade log entry is the one you write while the position is still open. In that window the outcome is unknown, the emotions are live, and your reasoning is honest — because you cannot yet know which parts to excuse.",
       "Write three things before you exit: why you are in, what would make you wrong, and how you feel right now. The first two give future-you a reference point. The third catches the patterns that quietly drive your worst decisions — the trades taken out of boredom, revenge, or the fear of missing a move that has already happened.",
       "The goal is not perfect prose. It is a truthful snapshot of your thinking at the moment it mattered. Read those snapshots back a month later and your recurring mistakes become almost embarrassingly clear.",
     ],

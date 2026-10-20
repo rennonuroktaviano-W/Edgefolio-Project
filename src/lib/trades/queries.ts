@@ -9,17 +9,13 @@ type TradeRow = {
   id: string;
   symbol: string;
   direction: string;
-  status: string;
-  entry_price: number | string;
-  exit_price: number | string | null;
-  quantity: number | string;
-  stop_loss: number | string | null;
-  take_profit: number | string | null;
-  fees: number | string;
+  quantity: string;
+  planned_rr: number | string | null;
+  outcome: string;
   strategy: string | null;
   notes: string | null;
   opened_at: string;
-  closed_at: string | null;
+  closed_at: string;
   created_at: string;
   updated_at: string;
 };
@@ -35,13 +31,9 @@ function toTrade(row: TradeRow): Trade {
     id: row.id,
     symbol: row.symbol,
     direction: row.direction === "short" ? "short" : "long",
-    status: row.status === "open" ? "open" : "closed",
-    entryPrice: num(row.entry_price) ?? 0,
-    exitPrice: num(row.exit_price),
-    quantity: num(row.quantity) ?? 0,
-    stopLoss: num(row.stop_loss),
-    takeProfit: num(row.take_profit),
-    fees: num(row.fees) ?? 0,
+    quantity: row.quantity,
+    plannedRR: num(row.planned_rr),
+    outcome: row.outcome === "win" ? "win" : "lose",
     strategy: row.strategy,
     notes: row.notes,
     openedAt: row.opened_at,
@@ -91,17 +83,13 @@ export function toTradeRow(input: TradeInput) {
   return {
     symbol: input.symbol,
     direction: input.direction,
-    status: input.status,
-    entry_price: input.entryPrice,
-    exit_price: input.status === "closed" ? input.exitPrice : null,
     quantity: input.quantity,
-    stop_loss: input.stopLoss,
-    take_profit: input.takeProfit,
-    fees: input.fees,
+    planned_rr: input.plannedRR,
+    outcome: input.outcome,
     strategy: input.strategy,
     notes: input.notes,
     opened_at: input.openedAt,
-    closed_at: input.status === "closed" ? input.closedAt ?? input.openedAt : null,
+    closed_at: input.closedAt ?? input.openedAt,
   };
 }
 

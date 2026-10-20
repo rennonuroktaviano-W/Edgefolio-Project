@@ -26,7 +26,6 @@ function empty(userId: string | null = null): RiskSettings {
     maxDailyLoss: null,
     maxDrawdown: null,
     minRewardRisk: null,
-    maxOpenPositions: null,
   };
 }
 
@@ -48,7 +47,6 @@ function readPlan(metadata: Record<string, unknown> | null, userId: string): Ris
     maxDailyLoss: num(plan.maxDailyLoss),
     maxDrawdown: num(plan.maxDrawdown),
     minRewardRisk: num(plan.minRewardRisk),
-    maxOpenPositions: num(plan.maxOpenPositions),
   };
 }
 
@@ -59,7 +57,6 @@ function toBlob(input: RiskSettingsInput): PlanBlob {
     maxDailyLoss: input.maxDailyLoss,
     maxDrawdown: input.maxDrawdown,
     minRewardRisk: input.minRewardRisk,
-    maxOpenPositions: input.maxOpenPositions,
   };
 }
 

@@ -11,7 +11,6 @@ const KNOWN_FIELDS = new Set([
   "maxDailyLoss",
   "maxDrawdown",
   "minRewardRisk",
-  "maxOpenPositions",
 ]);
 
 function optionalNumber(
@@ -83,11 +82,6 @@ export function validateRiskSettings(
     return { ok: false, error: "Enter a valid minimum reward/risk.", field: "minRewardRisk" };
   }
 
-  const maxOpen = optionalNumber(body.maxOpenPositions);
-  if (!maxOpen.ok) {
-    return { ok: false, error: "Enter a valid max open positions.", field: "maxOpenPositions" };
-  }
-
   const riskChecked = field(maxRisk.value, 1, "Max risk per trade");
   if (!riskChecked.ok) return riskChecked as Parsed<RiskSettingsInput>;
 
@@ -105,17 +99,6 @@ export function validateRiskSettings(
     };
   }
 
-  if (
-    maxOpen.value !== null &&
-    (!Number.isInteger(maxOpen.value) || maxOpen.value <= 0 || maxOpen.value > 500)
-  ) {
-    return {
-      ok: false,
-      error: "Max open positions must be a whole number between 1 and 500.",
-      field: "maxOpenPositions",
-    };
-  }
-
   return {
     ok: true,
     value: {
@@ -124,7 +107,6 @@ export function validateRiskSettings(
       maxDailyLoss: dailyChecked.value,
       maxDrawdown: ddChecked.value,
       minRewardRisk: minRr.value,
-      maxOpenPositions: maxOpen.value,
     },
   };
 }

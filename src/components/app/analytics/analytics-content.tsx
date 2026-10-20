@@ -45,7 +45,7 @@ export async function AnalyticsContent() {
           label="Net performance"
           value={formatSignedMoney(metrics.netPnl)}
           tone={tone(metrics.netPnl)}
-          hint={`${metrics.closedTrades} closed`}
+          hint={`${metrics.totalTrades} trades`}
         />
         <StatCard
           label="Profit factor"
@@ -56,7 +56,7 @@ export async function AnalyticsContent() {
         <StatCard
           label="Expectancy"
           value={metrics.expectancy === null ? "—" : formatSignedMoney(metrics.expectancy)}
-          hint="Average P/L per closed trade"
+          hint="Average P/L per trade"
           tone={tone(metrics.expectancy)}
         />
         <StatCard
@@ -126,7 +126,7 @@ export async function AnalyticsContent() {
           title="Performance by asset"
           subtitle="Net P/L per symbol"
           groups={metrics.byAsset}
-          emptyCopy="Close trades to see a per-asset breakdown."
+          emptyCopy="Log trades to see a per-asset breakdown."
         />
         <BreakdownPanel
           title="Performance by strategy"
@@ -141,11 +141,11 @@ export async function AnalyticsContent() {
       <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
         <p className="text-sm font-medium text-ink">How these are calculated</p>
         <ul className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
-          <li>Net performance = sum of realised P/L (fees included) on closed trades.</li>
-          <li>Win rate = wins ÷ closed trades.</li>
-          <li>Profit factor = gross profit ÷ gross loss (— when there are no losses).</li>
-          <li>Expectancy = net performance ÷ closed trades.</li>
-          <li>R multiple = realised P/L ÷ risk, where risk = |entry − stop| × size.</li>
+          <li>Net performance = Σ per trade: menang = size × planned R:R, kalah = −size.</li>
+          <li>Win rate = menang ÷ total trade.</li>
+          <li>Profit factor = total profit ÷ total loss (— when there are no losses).</li>
+          <li>Expectancy = net performance ÷ trades.</li>
+          <li>R multiple = +planned R:R saat menang, −1 saat kalah.</li>
           <li>Max drawdown = largest peak-to-trough drop of the equity curve.</li>
         </ul>
       </div>

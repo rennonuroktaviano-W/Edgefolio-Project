@@ -17,7 +17,6 @@ type PlanState = {
   maxDailyLoss: string;
   maxDrawdown: string;
   minRewardRisk: string;
-  maxOpenPositions: string;
 };
 
 const FIELDS: Field[] = [
@@ -51,12 +50,6 @@ const FIELDS: Field[] = [
     hint: "Skip any trade whose planned upside is smaller than this multiple of its risk.",
     step: "any",
   },
-  {
-    id: "maxOpenPositions",
-    label: "Max open positions",
-    hint: "How many trades you will hold at the same time.",
-    step: "1",
-  },
 ];
 
 export type PlanFormProps = {
@@ -66,7 +59,6 @@ export type PlanFormProps = {
     maxDailyLoss: number | null;
     maxDrawdown: number | null;
     minRewardRisk: number | null;
-    maxOpenPositions: number | null;
   };
 };
 
@@ -87,8 +79,6 @@ function toState(initial: PlanFormProps["initial"]): PlanState {
         : String(round(initial.maxDrawdown * 100, 4)),
     minRewardRisk:
       initial.minRewardRisk === null ? "" : String(initial.minRewardRisk),
-    maxOpenPositions:
-      initial.maxOpenPositions === null ? "" : String(initial.maxOpenPositions),
   };
 }
 
@@ -115,7 +105,6 @@ export function PlanForm({ initial }: PlanFormProps) {
       maxDailyLoss: toPercent(state.maxDailyLoss),
       maxDrawdown: toPercent(state.maxDrawdown),
       minRewardRisk: toNumber(state.minRewardRisk),
-      maxOpenPositions: toNumber(state.maxOpenPositions),
     };
 
     try {

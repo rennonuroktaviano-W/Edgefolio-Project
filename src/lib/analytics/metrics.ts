@@ -1,4 +1,5 @@
 import type { Trade } from "@/lib/trades/types";
+import { parseQuantityNumber } from "@/lib/trades/types";
 
 // ---------------------------------------------------------------------------
 // Derivation
@@ -6,19 +7,19 @@ import type { Trade } from "@/lib/trades/types";
 
 export type DerivedTrade = {
   trade: Trade;
-  // Realised profit/loss for closed trades (fees subtracted). Null while open.
-  realizedPnl: number | null;
-  // Money at risk based on the stop loss. Null when no stop was recorded.
+  // Realised P/L: a win pays size x planned RR (RR unset counts as 1),
+  // a loss costs the size.
+  realizedPnl: number;
+  // The $ risk recorded on the trade (the number inside the size).
   riskAmount: number | null;
-  // Planned reward based on the take profit. Null when none was recorded.
+  // Planned reward in $ (risk x planned RR). Null when no RR was recorded.
   rewardAmount: number | null;
-  // Planned reward/risk ratio. Null when either leg is missing.
+  // Planned reward/risk multiple. Null when unset.
   plannedRR: number | null;
-  // Realised result expressed in R (multiples of risk). Null when no risk.
-  realizedR: number | null;
-  // Win/loss/breakeven for closed trades. Null while open.
-  outcome: "win" | "loss" | "breakeven" | null;
-  rMultiple: number | null;
+  // Realised result in R: +planned RR on a win, -1 on a loss.
+  realizedR: number;
+  outcome: "win" | "lose";
+  rMultiple: number;
 };
 
 function round(value: number, digits = 8): number {
@@ -27,53 +28,24 @@ function round(value: number, digits = 8): number {
 }
 
 export function deriveTrade(trade: Trade): DerivedTrade {
-  const isClosed = trade.status === "closed" && trade.exitPrice !== null;
+  const quantity = parseQuantityNumber(trade.quantity);
+  const riskAmount = quantity > 0 ? round(quantity, 2) : null;
+  const rr = trade.plannedRR;
 
-  let realizedPnl: number | null = null;
-  let outcome: DerivedTrade["outcome"] = null;
-
-  if (isClosed && trade.exitPrice !== null) {
-    const gross =
-      trade.direction === "long"
-        ? (trade.exitPrice - trade.entryPrice) * trade.quantity
-        : (trade.entryPrice - trade.exitPrice) * trade.quantity;
-    realizedPnl = round(gross - trade.fees, 2);
-    outcome =
-      realizedPnl > 0 ? "win" : realizedPnl < 0 ? "loss" : "breakeven";
-  }
-
-  let riskAmount: number | null = null;
-  if (trade.stopLoss !== null) {
-    const perUnit = Math.abs(trade.entryPrice - trade.stopLoss);
-    if (perUnit > 0) {
-      riskAmount = round(perUnit * trade.quantity, 2);
-    }
-  }
-
-  let rewardAmount: number | null = null;
-  if (trade.takeProfit !== null) {
-    const perUnit = Math.abs(trade.takeProfit - trade.entryPrice);
-    if (perUnit > 0) {
-      rewardAmount = round(perUnit * trade.quantity, 2);
-    }
-  }
-
-  const plannedRR =
-    riskAmount && rewardAmount ? round(rewardAmount / riskAmount, 2) : null;
-
-  const realizedR =
-    realizedPnl !== null && riskAmount
-      ? round(realizedPnl / riskAmount, 2)
-      : null;
+  const realizedR = trade.outcome === "win" ? (rr ?? 1) : -1;
+  const realizedPnl =
+    riskAmount === null ? 0 : round(riskAmount * realizedR, 2);
+  const rewardAmount =
+    riskAmount !== null && rr !== null ? round(riskAmount * rr, 2) : null;
 
   return {
     trade,
     realizedPnl,
     riskAmount,
     rewardAmount,
-    plannedRR,
+    plannedRR: rr,
     realizedR,
-    outcome,
+    outcome: trade.outcome,
     rMultiple: realizedR,
   };
 }
@@ -89,7 +61,6 @@ export function deriveTrades(trades: Trade[]): DerivedTrade[] {
 export type GroupPerformance = {
   key: string;
   trades: number;
-  closed: number;
   netPnl: number;
   wins: number;
   winRate: number | null;
@@ -107,17 +78,14 @@ export type PeriodBucket = {
 
 export type Metrics = {
   totalTrades: number;
-  closedTrades: number;
-  openTrades: number;
   wins: number;
   losses: number;
-  breakeven: number;
   winRate: number | null;
   netPnl: number;
   grossProfit: number;
   grossLoss: number; // positive magnitude
   profitFactor: number | null;
-  expectancy: number | null; // average P/L per closed trade
+  expectancy: number | null; // average P/L per trade
   avgWin: number | null;
   avgLoss: number | null; // positive magnitude
   avgR: number | null;
@@ -187,23 +155,19 @@ function groupBy(
 
   const groups: GroupPerformance[] = [];
   for (const [key, items] of map) {
-    const closed = items.filter((item) => item.realizedPnl !== null);
-    const pnls = closed.map((item) => item.realizedPnl as number);
-    const rs = closed
-      .map((item) => item.realizedR)
-      .filter((value): value is number => value !== null);
-    const wins = closed.filter((item) => item.outcome === "win").length;
+    const pnls = items.map((item) => item.realizedPnl);
+    const rs = items.map((item) => item.realizedR);
+    const wins = items.filter((item) => item.outcome === "win").length;
 
     groups.push({
       key,
       trades: items.length,
-      closed: closed.length,
       netPnl: round(
         pnls.reduce((sum, value) => sum + value, 0),
         2,
       ),
       wins,
-      winRate: closed.length > 0 ? wins / closed.length : null,
+      winRate: items.length > 0 ? wins / items.length : null,
       avgR: mean(rs),
     });
   }
@@ -212,17 +176,17 @@ function groupBy(
 }
 
 function bucketBy(
-  closed: DerivedTrade[],
+  items: DerivedTrade[],
   keyOf: (date: Date) => string,
 ): PeriodBucket[] {
   const map = new Map<string, PeriodBucket>();
 
-  for (const item of closed) {
+  for (const item of items) {
     const date = closedDate(item.trade);
     if (!date) continue;
     const key = keyOf(date);
     const bucket = map.get(key) ?? { key, netPnl: 0, trades: 0, wins: 0 };
-    bucket.netPnl = round(bucket.netPnl + (item.realizedPnl ?? 0), 2);
+    bucket.netPnl = round(bucket.netPnl + item.realizedPnl, 2);
     bucket.trades += 1;
     if (item.outcome === "win") bucket.wins += 1;
     map.set(key, bucket);
@@ -233,14 +197,15 @@ function bucketBy(
 
 export function computeMetrics(trades: Trade[]): Metrics {
   const derived = deriveTrades(trades);
-  const closed = derived.filter((item) => item.realizedPnl !== null);
 
-  const pnls = closed.map((item) => item.realizedPnl as number);
-  const winsArr = pnls.filter((value) => value > 0);
-  const lossesArr = pnls.filter((value) => value < 0);
-  const rs = closed
-    .map((item) => item.realizedR)
-    .filter((value): value is number => value !== null);
+  const pnls = derived.map((item) => item.realizedPnl);
+  const winsArr = derived
+    .filter((item) => item.outcome === "win")
+    .map((item) => item.realizedPnl);
+  const lossesArr = derived
+    .filter((item) => item.outcome === "lose")
+    .map((item) => item.realizedPnl);
+  const rs = derived.map((item) => item.realizedR);
   const rrs = derived
     .map((item) => item.plannedRR)
     .filter((value): value is number => value !== null);
@@ -258,12 +223,9 @@ export function computeMetrics(trades: Trade[]): Metrics {
     2,
   );
 
-  // Equity curve from closed trades ordered by close time.
-  const ordered = [...closed]
-    .map((item) => ({
-      item,
-      date: closedDate(item.trade),
-    }))
+  // Equity curve from trades ordered by close time.
+  const ordered = derived
+    .map((item) => ({ item, date: closedDate(item.trade) }))
     .filter(
       (entry): entry is { item: DerivedTrade; date: Date } =>
         entry.date !== null,
@@ -273,7 +235,7 @@ export function computeMetrics(trades: Trade[]): Metrics {
   const equityCurve: EquityPoint[] = [];
   let cumulative = 0;
   for (const { item, date } of ordered) {
-    cumulative = round(cumulative + (item.realizedPnl ?? 0), 2);
+    cumulative = round(cumulative + item.realizedPnl, 2);
     equityCurve.push({ date: date.toISOString(), value: cumulative });
   }
 
@@ -293,7 +255,7 @@ export function computeMetrics(trades: Trade[]): Metrics {
   for (const item of ordered) {
     const weekday = item.date.getUTCDay();
     const bucket = weekdayTotals.get(weekday) ?? { netPnl: 0, trades: 0 };
-    bucket.netPnl = round(bucket.netPnl + (item.item.realizedPnl ?? 0), 2);
+    bucket.netPnl = round(bucket.netPnl + item.item.realizedPnl, 2);
     bucket.trades += 1;
     weekdayTotals.set(weekday, bucket);
   }
@@ -302,17 +264,14 @@ export function computeMetrics(trades: Trade[]): Metrics {
 
   return {
     totalTrades: trades.length,
-    closedTrades: closed.length,
-    openTrades: trades.length - closed.length,
     wins: winsArr.length,
     losses: lossesArr.length,
-    breakeven: closed.length - winsArr.length - lossesArr.length,
-    winRate: closed.length > 0 ? winsArr.length / closed.length : null,
+    winRate: derived.length > 0 ? winsArr.length / derived.length : null,
     netPnl,
     grossProfit,
     grossLoss,
     profitFactor: grossLoss > 0 ? round(grossProfit / grossLoss, 2) : null,
-    expectancy: closed.length > 0 ? round(netPnl / closed.length, 2) : null,
+    expectancy: derived.length > 0 ? round(netPnl / derived.length, 2) : null,
     avgWin: mean(winsArr),
     avgLoss: lossesArr.length > 0 ? Math.abs(mean(lossesArr) as number) : null,
     avgR: mean(rs),
@@ -324,9 +283,9 @@ export function computeMetrics(trades: Trade[]): Metrics {
     equityCurve,
     byAsset: groupBy(derived, (trade) => trade.symbol),
     byStrategy: groupBy(derived, (trade) => trade.strategy),
-    byDay: bucketBy(closed, dayKey),
-    byWeek: bucketBy(closed, weekKey),
-    byMonth: bucketBy(closed, monthKey),
+    byDay: bucketBy(derived, dayKey),
+    byWeek: bucketBy(derived, weekKey),
+    byMonth: bucketBy(derived, monthKey),
     byWeekday: [...weekdayTotals.entries()]
       .map(([weekday, value]) => ({ weekday, ...value }))
       .sort((a, b) => a.weekday - b.weekday),

@@ -119,21 +119,12 @@ export function PeriodBars({
   );
 }
 
-export function WinLossBar({
-  wins,
-  losses,
-  breakeven,
-}: {
-  wins: number;
-  losses: number;
-  breakeven: number;
-}) {
-  const total = wins + losses + breakeven;
+export function WinLossBar({ wins, losses }: { wins: number; losses: number }) {
+  const total = wins + losses;
   if (total === 0) return null;
 
   const segments = [
     { value: wins, className: "bg-positive" },
-    { value: breakeven, className: "bg-warning" },
     { value: losses, className: "bg-negative" },
   ];
 

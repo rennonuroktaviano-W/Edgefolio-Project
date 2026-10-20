@@ -15,19 +15,16 @@ import { deriveTrade } from "@/lib/analytics/metrics";
 import type { Trade } from "@/lib/trades/types";
 import {
   formatDate,
-  formatPrice,
   formatR,
   formatSignedMoney,
 } from "@/lib/trading/format";
 
-type StatusFilter = "all" | "open" | "closed";
 type DirectionFilter = "all" | "long" | "short";
 type SortKey = "date" | "pnl" | "symbol";
 
 export function TradesView({ trades }: { trades: Trade[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("all");
   const [direction, setDirection] = useState<DirectionFilter>("all");
   const [sort, setSort] = useState<SortKey>("date");
   const [formOpen, setFormOpen] = useState(false);
@@ -40,7 +37,6 @@ export function TradesView({ trades }: { trades: Trade[] }) {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const rows = trades.filter((trade) => {
-      if (status !== "all" && trade.status !== status) return false;
       if (direction !== "all" && trade.direction !== direction) return false;
       if (needle) {
         const haystack = `${trade.symbol} ${trade.strategy ?? ""}`.toLowerCase();
@@ -52,13 +48,11 @@ export function TradesView({ trades }: { trades: Trade[] }) {
     return rows.sort((a, b) => {
       if (sort === "symbol") return a.symbol.localeCompare(b.symbol);
       if (sort === "pnl") {
-        const pa = deriveTrade(a).realizedPnl ?? 0;
-        const pb = deriveTrade(b).realizedPnl ?? 0;
-        return pb - pa;
+        return deriveTrade(b).realizedPnl - deriveTrade(a).realizedPnl;
       }
       return new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime();
     });
-  }, [trades, query, status, direction, sort]);
+  }, [trades, query, direction, sort]);
 
   function openCreate() {
     setEditing(undefined);
@@ -103,16 +97,6 @@ export function TradesView({ trades }: { trades: Trade[] }) {
             value={query}
             onChange={setQuery}
             placeholder="Search symbol or strategy"
-          />
-          <SegmentedControl
-            label="Status"
-            value={status}
-            onChange={setStatus}
-            options={[
-              { value: "all", label: "All" },
-              { value: "open", label: "Open" },
-              { value: "closed", label: "Closed" },
-            ]}
           />
           <SegmentedControl
             label="Direction"
@@ -176,11 +160,10 @@ export function TradesView({ trades }: { trades: Trade[] }) {
                 <tr className="text-xs text-muted">
                   <th scope="col" className="px-5 py-3 font-medium">Symbol</th>
                   <th scope="col" className="px-5 py-3 font-medium">Side</th>
-                  <th scope="col" className="px-5 py-3 font-medium">Entry</th>
-                  <th scope="col" className="px-5 py-3 font-medium">Exit</th>
                   <th scope="col" className="px-5 py-3 font-medium">Size</th>
-                  <th scope="col" className="px-5 py-3 font-medium">P/L</th>
+                  <th scope="col" className="px-5 py-3 font-medium">Result</th>
                   <th scope="col" className="px-5 py-3 font-medium">R</th>
+                  <th scope="col" className="px-5 py-3 font-medium">P/L</th>
                   <th scope="col" className="px-5 py-3 font-medium">Date</th>
                   <th scope="col" className="px-5 py-3 font-medium">
                     <span className="sr-only">Actions</span>
@@ -205,29 +188,22 @@ export function TradesView({ trades }: { trades: Trade[] }) {
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-muted">
-                        {formatPrice(trade.entryPrice)}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted">
-                        {trade.exitPrice === null ? "—" : formatPrice(trade.exitPrice)}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted">
                         {trade.quantity}
                       </td>
-                      <td className="px-5 py-3.5 text-sm">
-                        {pnl === null ? (
-                          <Badge tone="info">Open</Badge>
-                        ) : (
-                          <span
-                            className={
-                              pnl >= 0 ? "text-positive" : "text-negative"
-                            }
-                          >
-                            {formatSignedMoney(pnl)}
-                          </span>
-                        )}
+                      <td className="px-5 py-3.5">
+                        <Badge tone={trade.outcome === "win" ? "positive" : "negative"}>
+                          {trade.outcome === "win" ? "Win" : "Lose"}
+                        </Badge>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-muted">
-                        {derived.realizedR === null ? "—" : formatR(derived.realizedR)}
+                        {formatR(derived.realizedR)}
+                      </td>
+                      <td className="px-5 py-3.5 text-sm">
+                        <span
+                          className={pnl >= 0 ? "text-positive" : "text-negative"}
+                        >
+                          {formatSignedMoney(pnl)}
+                        </span>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-muted">
                         {formatDate(trade.openedAt)}
@@ -239,6 +215,9 @@ export function TradesView({ trades }: { trades: Trade[] }) {
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => openEdit(trade)}>
                             Edit
+                          </Button>
+                          <Button size="sm" variant="danger" onClick={() => setDeleteTarget(trade)}>
+                            Delete
                           </Button>
                         </div>
                       </td>
@@ -266,34 +245,23 @@ export function TradesView({ trades }: { trades: Trade[] }) {
                         >
                           {trade.direction === "long" ? "Long" : "Short"}
                         </Badge>
-                        {trade.status === "open" ? (
-                          <Badge tone="info">Open</Badge>
-                        ) : null}
+                        <Badge tone={trade.outcome === "win" ? "positive" : "negative"}>
+                          {trade.outcome === "win" ? "Win" : "Lose"}
+                        </Badge>
                       </div>
                       <p className="mt-1 text-xs text-muted">
-                        {formatDate(trade.openedAt)} · {formatPrice(trade.entryPrice)}
-                        {trade.exitPrice === null
-                          ? ""
-                          : ` → ${formatPrice(trade.exitPrice)}`}
+                        {formatDate(trade.openedAt)} · {trade.quantity}
                       </p>
                     </div>
                     <div className="text-right">
                       <p
                         className={`text-sm font-medium ${
-                          pnl === null
-                            ? "text-faint"
-                            : pnl >= 0
-                              ? "text-positive"
-                              : "text-negative"
+                          pnl >= 0 ? "text-positive" : "text-negative"
                         }`}
                       >
-                        {pnl === null ? "—" : formatSignedMoney(pnl)}
+                        {formatSignedMoney(pnl)}
                       </p>
-                      <p className="text-xs text-faint">
-                        {derived.realizedR === null
-                          ? ""
-                          : formatR(derived.realizedR)}
-                      </p>
+                      <p className="text-xs text-faint">{formatR(derived.realizedR)}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
@@ -302,6 +270,9 @@ export function TradesView({ trades }: { trades: Trade[] }) {
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(trade)}>
                       Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => setDeleteTarget(trade)}>
+                      Delete
                     </Button>
                   </div>
                 </li>
@@ -371,37 +342,23 @@ function TradeDetail({
 }) {
   const derived = deriveTrade(trade);
   const rows: { label: string; value: string }[] = [
-    { label: "Status", value: trade.status === "open" ? "Open" : "Closed" },
-    { label: "Entry price", value: formatPrice(trade.entryPrice) },
     {
-      label: "Exit price",
-      value: trade.exitPrice === null ? "—" : formatPrice(trade.exitPrice),
+      label: "Result",
+      value: trade.outcome === "win" ? "Win" : "Lose",
     },
-    { label: "Quantity", value: String(trade.quantity) },
+    { label: "Size", value: trade.quantity },
     {
-      label: "Stop loss",
-      value: trade.stopLoss === null ? "—" : formatPrice(trade.stopLoss),
+      label: "Planned R:R",
+      value: trade.plannedRR === null ? "—" : formatR(trade.plannedRR),
     },
-    {
-      label: "Take profit",
-      value: trade.takeProfit === null ? "—" : formatPrice(trade.takeProfit),
-    },
-    { label: "Fees", value: formatPrice(trade.fees) },
     { label: "Strategy", value: trade.strategy ?? "—" },
     {
       label: "Realised P/L",
-      value:
-        derived.realizedPnl === null
-          ? "—"
-          : formatSignedMoney(derived.realizedPnl),
+      value: formatSignedMoney(derived.realizedPnl),
     },
     {
       label: "Realised R",
-      value: derived.realizedR === null ? "—" : formatR(derived.realizedR),
-    },
-    {
-      label: "Planned R:R",
-      value: derived.plannedRR === null ? "—" : formatR(derived.plannedRR),
+      value: formatR(derived.realizedR),
     },
   ];
 

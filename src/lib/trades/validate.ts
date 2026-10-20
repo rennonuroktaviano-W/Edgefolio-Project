@@ -1,5 +1,10 @@
 import type { TradeInput } from "@/lib/trades/types";
-import { isTradeDirection, isTradeStatus } from "@/lib/trades/types";
+import {
+  hasDigits,
+  isTradeDirection,
+  isTradeOutcome,
+  quantityHasUnit,
+} from "@/lib/trades/types";
 
 export type ValidationResult<T> =
   | { ok: true; value: T }
@@ -54,65 +59,48 @@ export function validateTrade(payload: unknown): ValidationResult<TradeInput> {
     return { ok: false, error: "Choose long or short.", field: "direction" };
   }
 
-  const status = body.status ?? "closed";
-  if (!isTradeStatus(status)) {
-    return { ok: false, error: "Choose open or closed.", field: "status" };
+  const outcome = body.outcome;
+  if (!isTradeOutcome(outcome)) {
+    return { ok: false, error: "Choose win or lose.", field: "outcome" };
   }
 
-  const entry = optionalNumber(body.entryPrice);
-  if (!entry.ok || entry.value === null || entry.value < 0) {
-    return { ok: false, error: "Enter a valid entry price.", field: "entryPrice" };
+  const quantity =
+    typeof body.quantity === "string"
+      ? body.quantity.trim().slice(0, 40)
+      : typeof body.quantity === "number"
+        ? String(body.quantity)
+        : "";
+  if (!quantity || !hasDigits(quantity) || !quantityHasUnit(quantity)) {
+    return {
+      ok: false,
+      error: "Add a unit to the size, e.g. $100 or 0.5 SOL.",
+      field: "quantity",
+    };
   }
 
-  const quantity = optionalNumber(body.quantity);
-  if (!quantity.ok || quantity.value === null || quantity.value <= 0) {
-    return { ok: false, error: "Enter a quantity greater than 0.", field: "quantity" };
+  const plannedRR = optionalNumber(body.plannedRR);
+  if (!plannedRR.ok) {
+    return { ok: false, error: "Enter a valid reward/risk.", field: "plannedRR" };
   }
-
-  const stopLoss = optionalNumber(body.stopLoss);
-  if (!stopLoss.ok || (stopLoss.value !== null && stopLoss.value < 0)) {
-    return { ok: false, error: "Enter a valid stop loss.", field: "stopLoss" };
-  }
-
-  const takeProfit = optionalNumber(body.takeProfit);
-  if (!takeProfit.ok || (takeProfit.value !== null && takeProfit.value < 0)) {
-    return { ok: false, error: "Enter a valid take profit.", field: "takeProfit" };
-  }
-
-  const feesRaw = optionalNumber(body.fees);
-  const fees = !feesRaw.ok || feesRaw.value === null ? 0 : feesRaw.value;
-  if (fees < 0) {
-    return { ok: false, error: "Fees cannot be negative.", field: "fees" };
-  }
-
-  let exitPrice: number | null = null;
-  if (status === "closed") {
-    const exit = optionalNumber(body.exitPrice);
-    if (!exit.ok || exit.value === null || exit.value < 0) {
-      return {
-        ok: false,
-        error: "A closed trade needs an exit price.",
-        field: "exitPrice",
-      };
-    }
-    exitPrice = exit.value;
+  if (plannedRR.value !== null && (plannedRR.value <= 0 || plannedRR.value > 100)) {
+    return {
+      ok: false,
+      error: "Reward/risk must be greater than 0 (e.g. 2 for 2:1).",
+      field: "plannedRR",
+    };
   }
 
   const openedAt = isoOrNull(body.openedAt) ?? new Date().toISOString();
-  const closedAt = status === "closed" ? isoOrNull(body.closedAt) ?? openedAt : null;
+  const closedAt = isoOrNull(body.closedAt) ?? openedAt;
 
   return {
     ok: true,
     value: {
       symbol: symbol.toUpperCase(),
       direction,
-      status,
-      entryPrice: entry.value,
-      exitPrice,
-      quantity: quantity.value,
-      stopLoss: stopLoss.value,
-      takeProfit: takeProfit.value,
-      fees,
+      quantity,
+      plannedRR: plannedRR.value,
+      outcome,
       strategy: optionalString(body.strategy, 40),
       notes: optionalString(body.notes, 2000),
       openedAt,

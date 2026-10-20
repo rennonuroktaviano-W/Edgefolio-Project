@@ -5,7 +5,7 @@ const steps = [
   {
     step: "01",
     title: "Upload",
-    detail: "Add a statement or CSV export from your journal.",
+    detail: "Add a statement or CSV export from your trades.",
   },
   {
     step: "02",
@@ -20,19 +20,19 @@ const steps = [
 ];
 
 const rows = [
-  { date: "Mar 02", instrument: "EURUSD", entry: "1.0842", exit: "1.0871", pnl: 1.8 },
-  { date: "Mar 03", instrument: "BTCUSD", entry: "61,240", exit: "60,980", pnl: -1.0 },
-  { date: "Mar 05", instrument: "NAS100", entry: "17,860", exit: "17,924", pnl: 2.3 },
-  { date: "Mar 06", instrument: "XAUUSD", entry: "2,158", exit: "2,151", pnl: -0.7 },
-  { date: "Mar 09", instrument: "GBPJPY", entry: "189.42", exit: "190.10", pnl: 1.4 },
+  { date: "Mar 02", instrument: "EURUSD", size: "$120", pnl: 1.8 },
+  { date: "Mar 03", instrument: "BTCUSD", size: "0.05 BTC", pnl: -1.0 },
+  { date: "Mar 05", instrument: "NAS100", size: "$200", pnl: 2.3 },
+  { date: "Mar 06", instrument: "XAUUSD", size: "$150", pnl: -0.7 },
+  { date: "Mar 09", instrument: "GBPJPY", size: "0.5 SOL", pnl: 1.4 },
 ];
 
-const csvPreview = `date,instrument,entry,exit,pnl
-2026-03-02,EURUSD,1.0842,1.0871,+1.8
-2026-03-03,BTCUSD,61240,60980,-1.0
-2026-03-05,NAS100,17860,17924,+2.3
-2026-03-06,XAUUSD,2158,2151,-0.7
-2026-03-09,GBPJPY,189.42,190.10,+1.4`;
+const csvPreview = `date,instrument,size,rr,result
+2026-03-02,EURUSD,$120,2,win
+2026-03-03,BTCUSD,0.05 BTC,1,lose
+2026-03-05,NAS100,$200,2,win
+2026-03-06,XAUUSD,$150,1,lose
+2026-03-09,GBPJPY,0.5 SOL,1.5,win`;
 
 function FileIcon() {
   return (
@@ -115,7 +115,7 @@ export function ImportHistory() {
               <table className="w-full text-left">
                 <caption className="sr-only">
                   Illustrative preview of imported trades with date, instrument,
-                  entry price, exit price, and result.
+                  size, and result.
                 </caption>
                 <thead>
                   <tr className="text-xs text-muted">
@@ -125,17 +125,8 @@ export function ImportHistory() {
                     <th scope="col" className="px-4 py-3 font-medium">
                       Instrument
                     </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 py-3 font-medium sm:table-cell"
-                    >
-                      Entry
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 py-3 font-medium sm:table-cell"
-                    >
-                      Exit
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Size
                     </th>
                     <th scope="col" className="px-4 py-3 font-medium">
                       P&amp;L
@@ -152,12 +143,7 @@ export function ImportHistory() {
                       <td className="px-4 py-3 font-medium text-ink">
                         {row.instrument}
                       </td>
-                      <td className="hidden px-4 py-3 text-muted sm:table-cell">
-                        {row.entry}
-                      </td>
-                      <td className="hidden px-4 py-3 text-muted sm:table-cell">
-                        {row.exit}
-                      </td>
+                      <td className="px-4 py-3 text-muted">{row.size}</td>
                       <td
                         className={`px-4 py-3 font-medium ${
                           row.pnl >= 0 ? "text-positive" : "text-negative"
