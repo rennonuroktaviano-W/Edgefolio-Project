@@ -8,7 +8,7 @@ import { Modal } from "@/components/app/modal";
 import { SegmentedControl, SearchField } from "@/components/app/form";
 import { Select } from "@/components/app/select";
 import { EmptyState } from "@/components/app/page-header";
-import { TradeForm } from "@/components/app/trades/trade-form";
+import { TradeForm, type TradeRiskContext } from "@/components/app/trades/trade-form";
 import { Message } from "@/components/auth/auth-fields";
 import { TradesIcon } from "@/components/app/icons";
 import { deriveTrade } from "@/lib/analytics/metrics";
@@ -22,12 +22,23 @@ import {
 type DirectionFilter = "all" | "long" | "short";
 type SortKey = "date" | "pnl" | "symbol";
 
-export function TradesView({ trades }: { trades: Trade[] }) {
+export type Prefill = { size?: string | undefined; rr?: string | undefined };
+
+export function TradesView({
+  trades,
+  prefill,
+  risk,
+}: {
+  trades: Trade[];
+  prefill?: Prefill;
+  risk?: TradeRiskContext;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [direction, setDirection] = useState<DirectionFilter>("all");
   const [sort, setSort] = useState<SortKey>("date");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(() => Boolean(prefill));
+  const [activePrefill, setActivePrefill] = useState<Prefill | undefined>(prefill);
   const [editing, setEditing] = useState<Trade | undefined>(undefined);
   const [detail, setDetail] = useState<Trade | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Trade | null>(null);
@@ -62,7 +73,13 @@ export function TradesView({ trades }: { trades: Trade[] }) {
   function openEdit(trade: Trade) {
     setEditing(trade);
     setDetail(null);
+    setActivePrefill(undefined);
     setFormOpen(true);
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setActivePrefill(undefined);
   }
 
   async function confirmDelete() {
@@ -284,15 +301,17 @@ export function TradesView({ trades }: { trades: Trade[] }) {
 
       <Modal
         open={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={closeForm}
         title={editing ? "Edit trade" : "Add trade"}
-        description="Prices and size are private to your account."
+        description="Sizes and notes are private to your account."
         size="lg"
       >
         <TradeForm
           trade={editing}
-          onDone={() => setFormOpen(false)}
-          onCancel={() => setFormOpen(false)}
+          prefill={editing ? undefined : activePrefill}
+          risk={risk}
+          onDone={closeForm}
+          onCancel={closeForm}
         />
       </Modal>
 

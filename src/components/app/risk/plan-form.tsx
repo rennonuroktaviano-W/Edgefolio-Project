@@ -15,40 +15,61 @@ type PlanState = {
   accountEquity: string;
   maxRiskPerTrade: string;
   maxDailyLoss: string;
+  maxWeeklyLoss: string;
   maxDrawdown: string;
   minRewardRisk: string;
+  maxTradesPerDay: string;
+  maxConsecutiveLosses: string;
 };
 
 const FIELDS: Field[] = [
   {
     id: "accountEquity",
-    label: "Account equity",
-    hint: "Your trading account size in the base currency. Used for % of account math.",
+    label: "Modal akun",
+    hint: "Ukuran akun trading kamu dalam mata uang dasar. Dipakai untuk semua perhitungan persen.",
     step: "any",
   },
   {
     id: "maxRiskPerTrade",
-    label: "Max risk per trade (%)",
-    hint: "The most of your account you will put at risk on one trade. 1% is a common ceiling.",
+    label: "Risiko maks. per trade (%)",
+    hint: "Porsi akun maksimal yang kamu pasang pada satu trade. 1% adalah batas umum.",
     step: "any",
   },
   {
     id: "maxDailyLoss",
-    label: "Max daily loss (%)",
-    hint: "Stop trading for the day once losses reach this share of your account.",
+    label: "Loss maks. harian (%)",
+    hint: "Berhenti trading hari ini begitu loss menyentuh porsi ini dari akun.",
+    step: "any",
+  },
+  {
+    id: "maxWeeklyLoss",
+    label: "Loss maks. mingguan (%)",
+    hint: "Batas loss untuk satu minggu. Kalau mentok, rehat sampai minggu berikutnya.",
     step: "any",
   },
   {
     id: "maxDrawdown",
-    label: "Max drawdown (%)",
-    hint: "Your total loss tolerance from peak equity before you step back.",
+    label: "Drawdown maks. (%)",
+    hint: "Toleransi total penurunan dari puncak equity sebelum kamu mundur dulu.",
     step: "any",
   },
   {
     id: "minRewardRisk",
-    label: "Minimum reward / risk",
-    hint: "Skip any trade whose planned upside is smaller than this multiple of its risk.",
+    label: "R:R minimum",
+    hint: "Abaikan trade yang potensi untungnya lebih kecil dari kelipatan ini terhadap risikonya. Contoh: 2 = untung 2× risiko.",
     step: "any",
+  },
+  {
+    id: "maxTradesPerDay",
+    label: "Maks. trade per hari",
+    hint: "Jumlah trade maksimal dalam satu hari. Membantu mencegah overtrading.",
+    step: "1",
+  },
+  {
+    id: "maxConsecutiveLosses",
+    label: "Maks. loss beruntun",
+    hint: "Berapa loss beruntun sebelum kamu wajib istirahat.",
+    step: "1",
   },
 ];
 
@@ -57,8 +78,11 @@ export type PlanFormProps = {
     accountEquity: number | null;
     maxRiskPerTrade: number | null;
     maxDailyLoss: number | null;
+    maxWeeklyLoss: number | null;
     maxDrawdown: number | null;
     minRewardRisk: number | null;
+    maxTradesPerDay: number | null;
+    maxConsecutiveLosses: number | null;
   };
 };
 
@@ -73,12 +97,22 @@ function toState(initial: PlanFormProps["initial"]): PlanState {
       initial.maxDailyLoss === null
         ? ""
         : String(round(initial.maxDailyLoss * 100, 4)),
+    maxWeeklyLoss:
+      initial.maxWeeklyLoss === null
+        ? ""
+        : String(round(initial.maxWeeklyLoss * 100, 4)),
     maxDrawdown:
       initial.maxDrawdown === null
         ? ""
         : String(round(initial.maxDrawdown * 100, 4)),
     minRewardRisk:
       initial.minRewardRisk === null ? "" : String(initial.minRewardRisk),
+    maxTradesPerDay:
+      initial.maxTradesPerDay === null ? "" : String(initial.maxTradesPerDay),
+    maxConsecutiveLosses:
+      initial.maxConsecutiveLosses === null
+        ? ""
+        : String(initial.maxConsecutiveLosses),
   };
 }
 
@@ -103,8 +137,11 @@ export function PlanForm({ initial }: PlanFormProps) {
       accountEquity: toNumber(state.accountEquity),
       maxRiskPerTrade: toPercent(state.maxRiskPerTrade),
       maxDailyLoss: toPercent(state.maxDailyLoss),
+      maxWeeklyLoss: toPercent(state.maxWeeklyLoss),
       maxDrawdown: toPercent(state.maxDrawdown),
       minRewardRisk: toNumber(state.minRewardRisk),
+      maxTradesPerDay: toNumber(state.maxTradesPerDay),
+      maxConsecutiveLosses: toNumber(state.maxConsecutiveLosses),
     };
 
     try {
@@ -116,14 +153,14 @@ export function PlanForm({ initial }: PlanFormProps) {
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "We could not save your risk plan.");
+        setError(data.error ?? "Rencana risiko tidak bisa disimpan.");
         return;
       }
 
-      setNotice("Your risk plan is saved.");
+      setNotice("Rencana risiko tersimpan.");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Terjadi kesalahan. Coba lagi.");
     } finally {
       setSaving(false);
     }
@@ -132,10 +169,10 @@ export function PlanForm({ initial }: PlanFormProps) {
   return (
     <form onSubmit={handleSubmit} className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
       <div>
-        <p className="text-sm font-medium text-ink">Your risk plan</p>
+        <p className="text-sm font-medium text-ink">Rencana risiko kamu</p>
         <p className="mt-1 text-xs text-muted">
-          The limits you want to hold yourself to. They are used by the
-          calculator and checked against your actual trades.
+          Batas yang kamu pegang sendiri. Dipakai oleh kalkulator dan
+          dicek terhadap trade nyata kamu.
         </p>
       </div>
 
@@ -161,7 +198,7 @@ export function PlanForm({ initial }: PlanFormProps) {
           disabled={saving}
           className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save risk plan"}
+          {saving ? "Menyimpan…" : "Simpan rencana"}
         </button>
         {notice ? <p className="text-sm text-positive">{notice}</p> : null}
         {error ? <p className="text-sm text-negative">{error}</p> : null}

@@ -93,6 +93,103 @@ export function maxConsecutiveStreak(
 
 export type DailyLoss = { date: string; loss: number };
 
+// Net P/L for the calendar day (UTC) containing `day`. Positive on profit days.
+export function pnlForDay(items: DerivedTrade[], day: Date): number {
+  const key = dayKey(day);
+  let total = 0;
+  for (const item of items) {
+    const date = closedDate(item.trade);
+    if (date && dayKey(date) === key) total += item.realizedPnl;
+  }
+  return Math.round(total * 100) / 100;
+}
+
+// Number of trades closed on the calendar day (UTC) containing `day`.
+export function tradesForDay(items: DerivedTrade[], day: Date): number {
+  const key = dayKey(day);
+  let count = 0;
+  for (const item of items) {
+    const date = closedDate(item.trade);
+    if (date && dayKey(date) === key) count += 1;
+  }
+  return count;
+}
+
+// Net P/L for the current week (Monday 00:00 UTC through the given instant).
+export function pnlThisWeek(items: DerivedTrade[], now: Date): number {
+  const day = now.getUTCDay() || 7;
+  const monday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  monday.setUTCDate(monday.getUTCDate() - (day - 1));
+  const start = monday.getTime();
+  const end = start + 7 * 86_400_000;
+
+  let total = 0;
+  for (const item of items) {
+    const date = closedDate(item.trade);
+    if (!date) continue;
+    const time = date.getTime();
+    if (time >= start && time < end) total += item.realizedPnl;
+  }
+  return Math.round(total * 100) / 100;
+}
+
+// Trailing run of wins/losses counting backwards from the most recent trade.
+export function currentStreak(
+  items: DerivedTrade[],
+  kind: "win" | "loss",
+): number {
+  const ordered = [...items].sort((a, b) => {
+    const da = closedDate(a.trade)?.getTime() ?? 0;
+    const db = closedDate(b.trade)?.getTime() ?? 0;
+    return db - da;
+  });
+
+  let streak = 0;
+  for (const item of ordered) {
+    const isMatch = kind === "win" ? item.realizedPnl > 0 : item.realizedPnl < 0;
+    if (!isMatch) break;
+    streak += 1;
+  }
+  return streak;
+}
+
+export type DrawdownDuration = {
+  // Whole days since the equity curve last touched a new high-water mark.
+  days: number;
+  // True while the curve sits at its peak.
+  atPeak: boolean;
+};
+
+// Days the account has been under water (measured from the last equity peak).
+export function drawdownDuration(
+  equityCurve: { date: string; value: number }[],
+  now: Date,
+): DrawdownDuration | null {
+  if (equityCurve.length === 0) return null;
+
+  let peak = -Infinity;
+  let peakTime = 0;
+  for (const point of equityCurve) {
+    const time = new Date(point.date).getTime();
+    if (point.value >= peak) {
+      peak = point.value;
+      peakTime = time;
+    }
+  }
+  if (!Number.isFinite(peak)) return null;
+
+  const last = equityCurve[equityCurve.length - 1].value;
+  if (last >= peak) return { days: 0, atPeak: true };
+
+  const days = Math.max(
+    0,
+    Math.floor((now.getTime() - peakTime) / 86_400_000),
+  );
+  return { days, atPeak: false };
+}
+
 // Net loss for each calendar day that ended negative, sorted worst-first.
 export function worstDailyLosses(
   items: DerivedTrade[],

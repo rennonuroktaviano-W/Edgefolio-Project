@@ -89,6 +89,9 @@ export type Metrics = {
   avgWin: number | null;
   avgLoss: number | null; // positive magnitude
   avgR: number | null;
+  stdDevR: number | null;
+  medianR: number | null;
+  payoffRatio: number | null; // avg win / avg loss ($)
   avgRewardRisk: number | null;
   largestWin: number | null;
   largestLoss: number | null; // negative value
@@ -137,6 +140,24 @@ function weekKey(date: Date): string {
 function mean(values: number[]): number | null {
   if (values.length === 0) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+
+function stdDev(values: number[]): number | null {
+  if (values.length < 2) return null;
+  const avg = mean(values) as number;
+  const variance =
+    values.reduce((sum, value) => sum + (value - avg) ** 2, 0) /
+    (values.length - 1);
+  return Math.sqrt(variance);
 }
 
 function groupBy(
@@ -262,6 +283,10 @@ export function computeMetrics(trades: Trade[]): Metrics {
 
   const worst = [...pnls].sort((a, b) => a - b)[0];
 
+  const avgWinValue = mean(winsArr);
+  const avgLossValue =
+    lossesArr.length > 0 ? Math.abs(mean(lossesArr) as number) : null;
+
   return {
     totalTrades: trades.length,
     wins: winsArr.length,
@@ -272,9 +297,15 @@ export function computeMetrics(trades: Trade[]): Metrics {
     grossLoss,
     profitFactor: grossLoss > 0 ? round(grossProfit / grossLoss, 2) : null,
     expectancy: derived.length > 0 ? round(netPnl / derived.length, 2) : null,
-    avgWin: mean(winsArr),
-    avgLoss: lossesArr.length > 0 ? Math.abs(mean(lossesArr) as number) : null,
+    avgWin: avgWinValue,
+    avgLoss: avgLossValue,
     avgR: mean(rs),
+    stdDevR: stdDev(rs),
+    medianR: median(rs),
+    payoffRatio:
+      avgWinValue !== null && avgLossValue !== null && avgLossValue > 0
+        ? round(avgWinValue / avgLossValue, 2)
+        : null,
     avgRewardRisk: mean(rrs),
     largestWin: winsArr.length > 0 ? Math.max(...winsArr) : null,
     largestLoss: worst !== undefined ? worst : null,

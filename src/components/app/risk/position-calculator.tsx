@@ -1,14 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { NumberField, SegmentedControl } from "@/components/app/form";
 import { Badge } from "@/components/app/badge";
 import type { RiskSettings } from "@/lib/risk/types";
 import { formatMoney, formatNumber, formatRatio } from "@/lib/trading/format";
 
-type Direction = "long" | "short";
+type Mode = "risk" | "target" | "fixed";
 
 export function PositionCalculator({ settings }: { settings: RiskSettings }) {
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>("risk");
   const [equity, setEquity] = useState(() =>
     settings.accountEquity === null ? "" : String(settings.accountEquity),
   );
@@ -17,170 +20,241 @@ export function PositionCalculator({ settings }: { settings: RiskSettings }) {
       ? ""
       : String(round(settings.maxRiskPerTrade * 100, 2)),
   );
-  const [direction, setDirection] = useState<Direction>("long");
+  const [target, setTarget] = useState("");
+  const [rr, setRr] = useState(() =>
+    settings.minRewardRisk === null ? "" : String(settings.minRewardRisk),
+  );
+  const [size, setSize] = useState("");
   const [entry, setEntry] = useState("");
   const [stop, setStop] = useState("");
-  const [target, setTarget] = useState("");
 
   const result = useMemo(() => {
     const equityValue = parse(equity);
-    const riskValue = parse(riskPct);
-    const entryValue = parse(entry);
-    const stopValue = parse(stop);
-    const targetValue = target === "" ? null : parse(target);
 
     if (equityValue === null || equityValue <= 0) {
-      return { error: "Enter your account equity to size a position." } as const;
+      return { ok: false as const, error: "Isi modal akun dulu untuk menghitung ukuran posisi." };
     }
-    if (riskValue === null || riskValue <= 0 || riskValue >= 100) {
+
+    if (mode === "risk") {
+      const riskValue = parse(riskPct);
+      if (riskValue === null || riskValue <= 0 || riskValue >= 100) {
+        return { ok: false as const, error: "Risiko per trade harus antara 0 dan 100%." };
+      }
+      const riskAmount = equityValue * (riskValue / 100);
+      const units = unitsFromStop(riskAmount, entry, stop);
+
+      if (!units.ok) return units;
+
       return {
-        error: "Risk per trade must be between 0 and 100%.",
-      } as const;
-    }
-    if (entryValue === null || entryValue <= 0) {
-      return { error: "Enter a valid entry price." } as const;
-    }
-    if (stopValue === null || stopValue <= 0) {
-      return { error: "Enter a valid stop price." } as const;
+        ok: true as const,
+        size: riskAmount,
+        riskOfEquity: riskValue / 100,
+        units: units.value > 0 ? units.value : null,
+        stopDistance: units.value > 0 ? units.distance : null,
+        reward: parse(rr) !== null ? riskAmount * (parse(rr) as number) : null,
+        plannedRR: parse(rr),
+      };
     }
 
-    const stopDistance = Math.abs(entryValue - stopValue);
-    if (stopDistance === 0) {
+    if (mode === "target") {
+      const targetValue = parse(target);
+      const rrValue = parse(rr);
+      if (targetValue === null || targetValue <= 0) {
+        return { ok: false as const, error: "Masukkan target untung yang lebih besar dari 0." };
+      }
+      if (rrValue === null || rrValue <= 0) {
+        return { ok: false as const, error: "Masukkan R:R yang direncanakan (mis. 2)." };
+      }
+      const riskAmount = targetValue / rrValue;
       return {
-        error: "Stop must be on the opposite side of entry.",
-      } as const;
+        ok: true as const,
+        size: riskAmount,
+        riskOfEquity: riskAmount / equityValue,
+        units: null,
+        stopDistance: null,
+        reward: targetValue,
+        plannedRR: rrValue,
+      };
     }
 
-    if (direction === "long" && stopValue >= entryValue) {
-      return {
-        error: "For a long, the stop must sit below the entry.",
-      } as const;
+    const sizeValue = parse(size);
+    if (sizeValue === null || sizeValue <= 0) {
+      return { ok: false as const, error: "Masukkan ukuran size yang lebih besar dari 0." };
     }
-    if (direction === "short" && stopValue <= entryValue) {
-      return {
-        error: "For a short, the stop must sit above the entry.",
-      } as const;
-    }
-
-    const riskAmount = equityValue * (riskValue / 100);
-    const perUnitRisk = stopDistance;
-    const quantity = riskAmount / perUnitRisk;
-
-    const rewardAmount =
-      targetValue !== null && targetValue > 0
-        ? Math.abs(targetValue - entryValue) * quantity
-        : null;
-    const plannedRR = rewardAmount !== null ? rewardAmount / riskAmount : null;
-
+    const rrValue = parse(rr);
     return {
-      quantity: round(quantity, 6),
-      riskAmount,
-      riskOfEquity: riskValue / 100,
-      perUnitRisk,
-      rewardAmount,
-      plannedRR,
-    } as const;
-  }, [entry, equity, direction, riskPct, stop, target]);
+      ok: true as const,
+      size: sizeValue,
+      riskOfEquity: sizeValue / equityValue,
+      units: null,
+      stopDistance: null,
+      reward: rrValue !== null && rrValue > 0 ? sizeValue * rrValue : null,
+      plannedRR: rrValue !== null && rrValue > 0 ? rrValue : null,
+    };
+  }, [entry, equity, mode, riskPct, rr, size, stop, target]);
+
+  const canPrefill = result.ok && result.size > 0;
+
+  function useForNewTrade() {
+    if (!result.ok || result.size <= 0) return;
+    const params = new URLSearchParams();
+    params.set("size", `$${round(result.size, 2)}`);
+    if (result.plannedRR !== null && result.plannedRR > 0) {
+      params.set("rr", String(round(result.plannedRR, 2)));
+    }
+    router.push(`/trades?${params.toString()}`);
+  }
 
   return (
     <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-ink">Position size calculator</p>
+          <p className="text-sm font-medium text-ink">Kalkulator posisi</p>
           <p className="mt-1 text-xs text-muted">
-            How many units to buy or sell so a stopped-out trade only costs the
-            risk you planned.
+            Hitung size trade dari batas risiko, target untung, atau size
+            tetap — semuanya berbasis modal akun kamu.
           </p>
         </div>
         <Badge tone="accent">Live math</Badge>
       </div>
 
+      <div className="mt-5">
+        <SegmentedControl
+          label="Mode hitung"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "risk", label: "Risiko per trade" },
+            { value: "target", label: "Target untung" },
+            { value: "fixed", label: "Size tetap" },
+          ]}
+        />
+      </div>
+
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <NumberField
           id="calc-equity"
-          label="Account equity"
+          label="Modal akun"
           value={equity}
           onChange={setEquity}
           placeholder="10000"
           step="any"
           min="0"
-          hint="In your base currency."
+          hint="Dalam mata uang dasar kamu."
         />
-        <NumberField
-          id="calc-risk"
-          label="Risk per trade (%)"
-          value={riskPct}
-          onChange={setRiskPct}
-          placeholder="1"
-          step="any"
-          min="0"
-          hint="Defaults from your risk plan when set."
-        />
-        <NumberField
-          id="calc-entry"
-          label="Entry price"
-          value={entry}
-          onChange={setEntry}
-          placeholder="100"
-          step="any"
-          min="0"
-        />
-        <div className="flex flex-col gap-3">
-          <SegmentedControl
-            label="Direction"
-            value={direction}
-            onChange={setDirection}
-            options={[
-              { value: "long", label: "Long" },
-              { value: "short", label: "Short" },
-            ]}
-          />
+        {mode === "risk" ? (
           <NumberField
-            id="calc-stop"
-            label="Stop price"
-            value={stop}
-            onChange={setStop}
-            placeholder="97"
+            id="calc-risk"
+            label="Risiko per trade (%)"
+            value={riskPct}
+            onChange={setRiskPct}
+            placeholder="1"
             step="any"
             min="0"
+            hint="Default dari rencana risiko kamu."
           />
-        </div>
-        <NumberField
-          id="calc-target"
-          label="Take profit (optional)"
-          value={target}
-          onChange={setTarget}
-          placeholder="110"
-          step="any"
-          min="0"
-          hint="Leave blank to skip the R:R readout."
-        />
+        ) : null}
+        {mode === "target" ? (
+          <NumberField
+            id="calc-target"
+            label="Target untung ($)"
+            value={target}
+            onChange={setTarget}
+            placeholder="200"
+            step="any"
+            min="0"
+            hint="Berapa yang mau kamu dapat dari trade ini."
+          />
+        ) : null}
+        {mode === "fixed" ? (
+          <NumberField
+            id="calc-size"
+            label="Size ($)"
+            value={size}
+            onChange={setSize}
+            placeholder="100"
+            step="any"
+            min="0"
+            hint="Jumlah yang dipasang per trade ini."
+          />
+        ) : null}
+        {mode !== "target" ? (
+          <NumberField
+            id="calc-rr"
+            label="R:R direncanakan (opsional)"
+            value={rr}
+            onChange={setRr}
+            placeholder="2"
+            step="any"
+            min="0"
+            hint="Mis. 2 = target untung 2× risiko."
+          />
+        ) : (
+          <NumberField
+            id="calc-rr"
+            label="R:R direncanakan"
+            value={rr}
+            onChange={setRr}
+            placeholder="2"
+            step="any"
+            min="0"
+            hint="Wajib: mis. 2 = target untung 2× risiko."
+          />
+        )}
+        {mode === "risk" ? (
+          <>
+            <NumberField
+              id="calc-entry"
+              label="Harga entry (opsional)"
+              value={entry}
+              onChange={setEntry}
+              placeholder="100"
+              step="any"
+              min="0"
+              hint="Isi entry + stop kalau mau tahu size dalam satuan unit."
+            />
+            <NumberField
+              id="calc-stop"
+              label="Harga stop (opsional)"
+              value={stop}
+              onChange={setStop}
+              placeholder="97"
+              step="any"
+              min="0"
+              hint="Stop harus di sisi berlawanan dari entry."
+            />
+          </>
+        ) : null}
       </div>
 
       <div className="mt-6 rounded-xl border border-hairline bg-night/40 p-4">
-        {"error" in result ? (
+        {result.ok === false ? (
           <p className="text-sm text-muted">{result.error}</p>
         ) : (
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs text-muted">Suggested size</p>
+              <p className="text-xs text-muted">Size yang disarankan</p>
               <p className="mt-1 text-2xl font-semibold tracking-tight text-ink">
-                {formatNumber(result.quantity, 6)}{" "}
-                <span className="text-sm font-normal text-muted">units</span>
+                {formatMoney(result.size)}
               </p>
+              {result.units !== null ? (
+                <p className="mt-1 text-xs text-muted">
+                  ≈ {formatNumber(result.units, 6)} unit (stop distance{" "}
+                  {formatNumber(result.stopDistance ?? 0, 6)})
+                </p>
+              ) : null}
             </div>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
-              <Readout label="Risk ($)" value={formatMoney(result.riskAmount)} />
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
               <Readout
-                label="Risk (%)"
+                label="Risiko (%)"
                 value={`${formatNumber(result.riskOfEquity * 100, 2)}%`}
               />
               <Readout
-                label="Stop distance"
-                value={formatNumber(result.perUnitRisk, 6)}
+                label="Potensi untung"
+                value={result.reward === null ? "—" : formatMoney(result.reward)}
               />
               <Readout
-                label="Planned R:R"
+                label="R:R"
                 value={
                   result.plannedRR === null
                     ? "—"
@@ -197,6 +271,20 @@ export function PositionCalculator({ settings }: { settings: RiskSettings }) {
         )}
       </div>
 
+      {canPrefill ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted">
+            Hasilnya bisa langsung jadi isi form trade baru.
+          </p>
+          <button
+            type="button"
+            onClick={useForNewTrade}
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Pakai untuk trade baru →
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -222,6 +310,33 @@ function Readout({
       </dd>
     </div>
   );
+}
+
+function unitsFromStop(
+  riskAmount: number,
+  entryRaw: string,
+  stopRaw: string,
+):
+  | { ok: true; value: number; distance: number }
+  | { ok: false; error: string } {
+  if (entryRaw.trim() === "" && stopRaw.trim() === "") {
+    return { ok: true, value: 0, distance: 0 };
+  }
+
+  const entryValue = parse(entryRaw);
+  const stopValue = parse(stopRaw);
+  if (entryValue === null || entryValue <= 0) {
+    return { ok: false, error: "Masukkan harga entry yang valid." };
+  }
+  if (stopValue === null || stopValue <= 0) {
+    return { ok: false, error: "Masukkan harga stop yang valid." };
+  }
+
+  const distance = Math.abs(entryValue - stopValue);
+  if (distance === 0) {
+    return { ok: false, error: "Stop harus berbeda dari entry." };
+  }
+  return { ok: true, value: riskAmount / distance, distance };
 }
 
 function parse(raw: string): number | null {

@@ -7,6 +7,21 @@ import { NumberField, SegmentedControl, TextAreaField } from "@/components/app/f
 import { Button } from "@/components/app/button";
 import { Message } from "@/components/auth/auth-fields";
 import type { Trade, TradeDirection, TradeOutcome } from "@/lib/trades/types";
+import { parseQuantityNumber } from "@/lib/trades/types";
+import { formatMoney } from "@/lib/trading/format";
+
+// Live risk-plan state, computed server-side on the trades page. Used to warn
+// (never block) when a new trade would breach the plan.
+export type TradeRiskContext = {
+  maxRiskAmount: number | null;
+  maxRiskLabel: string | null;
+  todayPnl: number;
+  dailyBreached: boolean;
+  weeklyBreached: boolean;
+  tradesBreached: boolean;
+  streakBreached: boolean;
+  lossStreakNow: number;
+};
 
 export function toLocalInput(iso: string | null): string {
   const date = iso ? new Date(iso) : new Date();
@@ -21,16 +36,16 @@ function fromLocalInput(value: string): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function numberOrEmpty(value: number | null): string {
-  return value === null || value === undefined ? "" : String(value);
-}
-
 export function TradeForm({
   trade,
+  prefill,
+  risk,
   onDone,
   onCancel,
 }: {
   trade?: Trade;
+  prefill?: { size?: string; rr?: string };
+  risk?: TradeRiskContext;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -41,10 +56,14 @@ export function TradeForm({
   const [direction, setDirection] = useState<TradeDirection>(
     trade?.direction ?? "long",
   );
-  const [quantity, setQuantity] = useState(trade?.quantity ?? "");
-  const [plannedRR, setPlannedRR] = useState(
-    numberOrEmpty(trade?.plannedRR ?? null),
-  );
+  const [quantity, setQuantity] = useState(trade?.quantity ?? prefill?.size ?? "");
+  const [plannedRR, setPlannedRR] = useState(() => {
+    if (trade?.plannedRR !== null && trade?.plannedRR !== undefined) {
+      return String(trade.plannedRR);
+    }
+    const fromPrefill = prefill?.rr ? Number(prefill.rr) : NaN;
+    return Number.isFinite(fromPrefill) ? String(fromPrefill) : "";
+  });
   const [outcome, setOutcome] = useState<TradeOutcome>(trade?.outcome ?? "win");
   const [strategy, setStrategy] = useState(trade?.strategy ?? "");
   const [openedAt, setOpenedAt] = useState(toLocalInput(trade?.openedAt ?? null));
@@ -95,6 +114,41 @@ export function TradeForm({
     } finally {
       setSaving(false);
     }
+  }
+
+  const sizeNumber = parseQuantityNumber(quantity);
+  const sizeOverLimit =
+    risk !== undefined &&
+    risk.maxRiskAmount !== null &&
+    sizeNumber > risk.maxRiskAmount;
+
+  const planWarnings: string[] = [];
+  if (risk?.dailyBreached) {
+    planWarnings.push(
+      `Loss hari ini sudah menyentuh limit harian kamu (${formatMoney(risk.todayPnl)}). Sebaiknya berhenti trading hari ini.`,
+    );
+  }
+  if (risk?.weeklyBreached) {
+    planWarnings.push(
+      "Loss minggu ini sudah menyentuh limit mingguan kamu — rehat sampai minggu depan.",
+    );
+  }
+  if (risk?.tradesBreached) {
+    planWarnings.push(
+      "Jumlah trade hari ini sudah mentok di batas rencana kamu.",
+    );
+  }
+  if (risk?.streakBreached) {
+    planWarnings.push(
+      `Kamu sudah ${risk.lossStreakNow}x loss beruntun — jeda dulu sebelum trade berikutnya.`,
+    );
+  }
+  if (sizeOverLimit && risk?.maxRiskAmount !== null) {
+    planWarnings.push(
+      `Size ini setara ${formatMoney(sizeNumber)} risiko, melebihi batas per trade kamu${
+        risk.maxRiskLabel ? ` (${risk.maxRiskLabel})` : ""
+      }.`,
+    );
   }
 
   return (
@@ -208,6 +262,22 @@ export function TradeForm({
         maxLength={2000}
         rows={3}
       />
+
+      {planWarnings.length > 0 ? (
+        <div
+          className="space-y-2 rounded-xl border border-warning/40 bg-warning/10 p-3.5"
+          role="alert"
+        >
+          {planWarnings.map((warning) => (
+            <p key={warning} className="text-xs text-ink">
+              — {warning}
+            </p>
+          ))}
+          <p className="text-xs text-muted">
+            Kamu tetap boleh menyimpan trade ini kalau memang disengaja.
+          </p>
+        </div>
+      ) : null}
 
       {error ? <Message tone="error">{error}</Message> : null}
 

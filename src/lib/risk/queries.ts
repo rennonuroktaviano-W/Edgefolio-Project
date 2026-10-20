@@ -24,8 +24,11 @@ function empty(userId: string | null = null): RiskSettings {
     accountEquity: null,
     maxRiskPerTrade: null,
     maxDailyLoss: null,
+    maxWeeklyLoss: null,
     maxDrawdown: null,
     minRewardRisk: null,
+    maxTradesPerDay: null,
+    maxConsecutiveLosses: null,
   };
 }
 
@@ -45,8 +48,11 @@ function readPlan(metadata: Record<string, unknown> | null, userId: string): Ris
     accountEquity: num(plan.accountEquity),
     maxRiskPerTrade: num(plan.maxRiskPerTrade),
     maxDailyLoss: num(plan.maxDailyLoss),
+    maxWeeklyLoss: num(plan.maxWeeklyLoss),
     maxDrawdown: num(plan.maxDrawdown),
     minRewardRisk: num(plan.minRewardRisk),
+    maxTradesPerDay: num(plan.maxTradesPerDay),
+    maxConsecutiveLosses: num(plan.maxConsecutiveLosses),
   };
 }
 
@@ -55,8 +61,11 @@ function toBlob(input: RiskSettingsInput): PlanBlob {
     accountEquity: input.accountEquity,
     maxRiskPerTrade: input.maxRiskPerTrade,
     maxDailyLoss: input.maxDailyLoss,
+    maxWeeklyLoss: input.maxWeeklyLoss,
     maxDrawdown: input.maxDrawdown,
     minRewardRisk: input.minRewardRisk,
+    maxTradesPerDay: input.maxTradesPerDay,
+    maxConsecutiveLosses: input.maxConsecutiveLosses,
   };
 }
 

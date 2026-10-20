@@ -17,13 +17,13 @@ export function Scorecard({ rows }: { rows: ScorecardRow[] }) {
     <div className="soft-frame rounded-2xl bg-surface-raised p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-ink">Risk scorecard</p>
+          <p className="text-sm font-medium text-ink">Scorecard risiko</p>
           <p className="mt-1 text-xs text-muted">
-            Your recorded trades measured against the limits you set.
+            Trade yang kamu catat diukur terhadap batas yang kamu tetapkan.
           </p>
         </div>
         <Badge tone={anyFail ? "warning" : "positive"}>
-          {anyFail ? "Needs attention" : "Within plan"}
+          {anyFail ? "Perlu perhatian" : "Sesuai rencana"}
         </Badge>
       </div>
 
@@ -53,10 +53,10 @@ export function Scorecard({ rows }: { rows: ScorecardRow[] }) {
                 }
               >
                 {row.status === "pass"
-                  ? "Pass"
+                  ? "Lolos"
                   : row.status === "fail"
-                    ? "Fail"
-                    : "No plan"}
+                    ? "Gagal"
+                    : "Tanpa rencana"}
               </Badge>
             </div>
           </li>
@@ -65,7 +65,7 @@ export function Scorecard({ rows }: { rows: ScorecardRow[] }) {
 
       {rows.length === 0 ? (
         <p className="mt-4 text-sm text-muted">
-          Save a risk plan above to see your scorecard.
+          Isi rencana risiko di atas untuk melihat scorecard kamu.
         </p>
       ) : null}
     </div>
