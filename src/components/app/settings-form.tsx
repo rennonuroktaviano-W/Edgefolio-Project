@@ -13,7 +13,6 @@ import {
 import { clearAppSession } from "@/lib/auth/app-session";
 
 export type SettingsUser = {
-  username: string | null;
   email: string | null;
   displayName: string | null;
 };
@@ -76,21 +75,10 @@ export function SettingsForm({ user }: { user: SettingsUser }) {
           Profile
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Your identity on Edgefolio. Your email is never shown publicly.
+          Your identity on Edgefolio.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-muted">Username</p>
-            <div className={readOnlyClasses}>
-              <UserIcon />
-              <span className="truncate">{user.username ?? "Not set"}</span>
-            </div>
-            <p className="mt-1.5 text-xs text-faint">
-              Usernames are set once and cannot be changed here.
-            </p>
-          </div>
-
           <div>
             <p className="mb-1.5 text-xs font-medium text-muted">Email</p>
             <div className={readOnlyClasses}>
@@ -112,7 +100,7 @@ export function SettingsForm({ user }: { user: SettingsUser }) {
             placeholder="Your name"
             autoComplete="name"
             icon={<UserIcon />}
-            hint="Shown on your profile. Leave blank to use your username."
+            hint="Used to greet you across the app."
           />
 
           <AuthSubmitButton

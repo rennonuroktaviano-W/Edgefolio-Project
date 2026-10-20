@@ -9,15 +9,12 @@ import { createServerClient } from "@supabase/ssr";
 const APP_ROUTE_PREFIXES = [
   "/explore",
   "/economic-calendar",
-  "/community",
-  "/leaderboard",
   "/dashboard",
   "/journal",
   "/trades",
   "/analytics",
   "/calendar",
   "/risk",
-  "/saved-recaps",
   "/settings",
 ];
 

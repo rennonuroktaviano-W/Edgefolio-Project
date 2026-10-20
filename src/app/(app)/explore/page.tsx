@@ -2,33 +2,20 @@ import { Suspense } from "react";
 import { io } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/dal";
 import {
-  discoverTraders,
-  featuredRecap,
-  listRecapsPage,
-  topSymbols,
-} from "@/lib/recaps/queries";
-import {
   getMarketSnapshot,
   isMarketConfigured,
   marketProviderName,
 } from "@/lib/market/provider";
-import { ExploreFeedProvider } from "@/components/app/explore/explore-feed-context";
 import { ExploreHeader } from "@/components/app/explore/explore-header";
 import { MarketPulse } from "@/components/app/explore/market-pulse";
 import { MarketNews } from "@/components/app/explore/market-news";
-import { TrendingTopics } from "@/components/app/explore/trending-topics";
-import { FeaturedRecap } from "@/components/app/explore/featured-recap";
-import { CommunityFeed } from "@/components/app/explore/community-feed";
 import { TradingIntelligence } from "@/components/app/explore/trading-intelligence";
-import { DiscoverTraders } from "@/components/app/explore/discover-traders";
 import { WeeklyReview } from "@/components/app/explore/weekly-review";
-import { ExploreMore } from "@/components/app/explore/explore-more";
-import { FeedSkeleton, PanelSkeleton } from "@/components/app/skeleton";
+import { PanelSkeleton } from "@/components/app/skeleton";
 
 export const metadata = {
   title: "Explore — Edgefolio",
-  description:
-    "Public trade recaps, trending topics, traders to discover, and educational insights.",
+  description: "Market pulse, news, and educational trading insights.",
 };
 
 function greetingFor(hour: number): string {
@@ -58,27 +45,18 @@ async function ExploreContent() {
   await io();
   const user = await getCurrentUser();
 
-  const [feed, symbols, featured, traders, snapshot] = await Promise.all([
-    listRecapsPage({ sort: "latest" }),
-    topSymbols(),
-    featuredRecap(),
-    discoverTraders(),
-    getMarketSnapshot(),
-  ]);
+  const snapshot = await getMarketSnapshot();
 
   const name = user?.displayName ?? user?.username ?? "trader";
-  const greeting = `${greetingFor(new Date().getHours())}, ${name}. Here is what the community is sharing.`;
+  const greeting = `${greetingFor(new Date().getHours())}, ${name}. Here is your market briefing.`;
   const rangeLabel = weekRangeLabel(new Date());
   const source = isMarketConfigured()
     ? (marketProviderName() ?? "Connected provider")
     : null;
 
   return (
-    <ExploreFeedProvider
-      initialRecaps={feed.recaps}
-      initialHasMore={feed.hasMore}
-    >
-      <ExploreHeader greeting={greeting} symbols={symbols} />
+    <div>
+      <ExploreHeader greeting={greeting} />
 
       <div className="mt-8 space-y-10">
         <MarketPulse
@@ -86,15 +64,10 @@ async function ExploreContent() {
           configured={isMarketConfigured()}
         />
         <MarketNews />
-        <TrendingTopics symbols={symbols} />
-        <FeaturedRecap recap={featured} />
-        <CommunityFeed />
         <TradingIntelligence />
-        <DiscoverTraders traders={traders} />
         <WeeklyReview rangeLabel={rangeLabel} source={source} />
-        <ExploreMore />
       </div>
-    </ExploreFeedProvider>
+    </div>
   );
 }
 
@@ -106,7 +79,6 @@ function ExploreSkeleton() {
         <PanelSkeleton height="h-48" />
         <PanelSkeleton height="h-32" />
         <PanelSkeleton height="h-72" />
-        <FeedSkeleton />
       </div>
     </div>
   );

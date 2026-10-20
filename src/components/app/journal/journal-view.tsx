@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/app/button";
 import { Badge } from "@/components/app/badge";
 import { Modal } from "@/components/app/modal";
-import { SearchField, SegmentedControl } from "@/components/app/form";
+import { SearchField } from "@/components/app/form";
 import { Select } from "@/components/app/select";
 import { EmptyState } from "@/components/app/page-header";
 import { JournalForm } from "@/components/app/journal/journal-form";
@@ -14,13 +14,11 @@ import { JournalIcon } from "@/components/app/icons";
 import type { JournalEntry } from "@/lib/journal/types";
 import { formatDate, formatR } from "@/lib/trading/format";
 
-type VisibilityFilter = "all" | "private" | "public";
 type SortKey = "date" | "title";
 
 export function JournalView({ entries }: { entries: JournalEntry[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [visibility, setVisibility] = useState<VisibilityFilter>("all");
   const [sort, setSort] = useState<SortKey>("date");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<JournalEntry | undefined>(undefined);
@@ -33,7 +31,6 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
     const needle = query.trim().toLowerCase();
     return entries
       .filter((entry) => {
-        if (visibility !== "all" && entry.visibility !== visibility) return false;
         if (needle) {
           const haystack =
             `${entry.title} ${entry.symbol ?? ""} ${entry.strategy ?? ""}`.toLowerCase();
@@ -46,7 +43,7 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
           ? a.title.localeCompare(b.title)
           : b.entryDate.localeCompare(a.entryDate),
       );
-  }, [entries, query, visibility, sort]);
+  }, [entries, query, sort]);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -81,16 +78,6 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
             onChange={setQuery}
             placeholder="Search title, symbol, strategy"
           />
-          <SegmentedControl
-            label="Visibility"
-            value={visibility}
-            onChange={setVisibility}
-            options={[
-              { value: "all", label: "All" },
-              { value: "private", label: "Private" },
-              { value: "public", label: "Public" },
-            ]}
-          />
         </div>
         <div className="flex items-center gap-3">
           <Select
@@ -122,7 +109,7 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
           <EmptyState
             Icon={JournalIcon}
             title="Your journal is empty"
-            description="Capture the thesis, psychology, and review behind your trades. Entries are private by default."
+            description="Capture the thesis, psychology, and review behind your trades. Entries are private."
             action={
               <Button
                 variant="primary"
@@ -152,9 +139,6 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
                   {entry.symbol ? (
                     <Badge tone="accent">{entry.symbol}</Badge>
                   ) : null}
-                  <Badge tone={entry.visibility === "public" ? "info" : "muted"}>
-                    {entry.visibility === "public" ? "Public" : "Private"}
-                  </Badge>
                   {entry.outcome ? (
                     <Badge
                       tone={
@@ -216,7 +200,7 @@ export function JournalView({ entries }: { entries: JournalEntry[] }) {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         title={editing ? "Edit entry" : "New journal entry"}
-        description="Private by default. Share it publicly to publish a recap."
+        description="Private to you."
         size="lg"
       >
         <JournalForm
@@ -288,9 +272,6 @@ function JournalDetail({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={entry.visibility === "public" ? "info" : "muted"}>
-          {entry.visibility === "public" ? "Public" : "Private"}
-        </Badge>
         {entry.symbol ? <Badge tone="accent">{entry.symbol}</Badge> : null}
         {entry.strategy ? <Badge>{entry.strategy}</Badge> : null}
         {entry.mood ? <Badge>Mood: {entry.mood}</Badge> : null}

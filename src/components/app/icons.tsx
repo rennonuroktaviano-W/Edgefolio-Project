@@ -139,30 +139,6 @@ export function PlusIcon({ className }: IconProps) {
   );
 }
 
-export function CommunityIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <circle cx="7.75" cy="7.5" r="2.75" />
-      <path d="M3 16.5a4.75 4.75 0 0 1 9.5 0" />
-      <path d="M13.5 5.25a2.75 2.75 0 0 1 0 5.5" />
-      <path d="M14.25 11.85a4.75 4.75 0 0 1 2.75 4.65" />
-    </svg>
-  );
-}
-
-export function LeaderboardIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M6.75 3.5h6.5v3.75a3.25 3.25 0 0 1-6.5 0z" />
-      <path d="M6.75 4.75h-2a2 2 0 0 0 2 2" />
-      <path d="M13.25 4.75h2a2 2 0 0 1-2 2" />
-      <path d="M10 10.5v2.75" />
-      <path d="M7.5 16.5h5" />
-      <path d="M8.25 16.5v-1.75a1.75 1.75 0 0 1 3.5 0v1.75" />
-    </svg>
-  );
-}
-
 export function DashboardIcon({ className }: IconProps) {
   return (
     <svg {...svgProps(className)}>
@@ -181,14 +157,6 @@ export function TradesIcon({ className }: IconProps) {
       <path d="m11.5 3.5 3 3-3 3" />
       <path d="M15 13.5H5.5" />
       <path d="m8.5 16.5-3-3 3-3" />
-    </svg>
-  );
-}
-
-export function SavedIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M6 3.5h8a1.25 1.25 0 0 1 1.25 1.25v11.75L10 13.5l-5.25 3V4.75A1.25 1.25 0 0 1 6 3.5z" />
     </svg>
   );
 }
@@ -234,14 +202,6 @@ export function ShareIcon({ className }: IconProps) {
       <path d="M10 3.25v9" />
       <path d="m6.75 6.5 3.25-3.25L13.25 6.5" />
       <path d="M5 10.5v4.75h10V10.5" />
-    </svg>
-  );
-}
-
-export function FlameIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps(className)}>
-      <path d="M10 3.25c2.5 2.4 3.75 4.7 3.75 6.75a3.75 3.75 0 0 1-7.5 0c0-1.1.4-2.1 1.1-3.05.35.9.9 1.5 1.65 1.8-.35-2 .3-3.85 1-5.5z" />
     </svg>
   );
 }

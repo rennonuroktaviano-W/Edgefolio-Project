@@ -1,8 +1,4 @@
-import {
-  isJournalVisibility,
-  isTradeOutcome,
-  type JournalInput,
-} from "@/lib/journal/types";
+import { isTradeOutcome, type JournalInput } from "@/lib/journal/types";
 import type { ValidationResult } from "@/lib/trades/validate";
 import { isTradeDirection } from "@/lib/trades/types";
 
@@ -55,14 +51,8 @@ export function validateJournal(
     };
   }
 
-  const visibility = body.visibility ?? "private";
-  if (!isJournalVisibility(visibility)) {
-    return {
-      ok: false,
-      error: "Choose private or public visibility.",
-      field: "visibility",
-    };
-  }
+  // Journal entries are always private; ignore any client-supplied visibility.
+  const visibility = "private" as const;
 
   const directionRaw = body.direction;
   let direction: JournalInput["direction"] = null;

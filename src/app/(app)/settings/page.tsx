@@ -43,7 +43,6 @@ async function SettingsAccount() {
   return (
     <SettingsForm
       user={{
-        username: user.username,
         email: user.email,
         displayName: user.displayName,
       }}
@@ -87,7 +86,7 @@ export default function SettingsPage() {
 
         <PlaceholderCard
           title="Privacy"
-          description="Control what others can see. Your journal and private notes are never public."
+          description="Your journal, trades, and private notes are never public."
         />
       </div>
     </div>

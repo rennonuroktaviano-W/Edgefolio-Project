@@ -12,14 +12,11 @@ import {
   CalendarIcon,
   ClockIcon,
   CloseIcon,
-  CommunityIcon,
   CompassIcon,
   DashboardIcon,
   JournalIcon,
-  LeaderboardIcon,
   MenuIcon,
   PanelIcon,
-  SavedIcon,
   SettingsIcon,
   ShieldIcon,
   TradesIcon,
@@ -42,8 +39,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Explore", href: "/explore", Icon: CompassIcon },
       { label: "Economic Calendar", href: "/economic-calendar", Icon: ClockIcon },
-      { label: "Community", href: "/community", Icon: CommunityIcon },
-      { label: "Leaderboard", href: "/leaderboard", Icon: LeaderboardIcon },
     ],
   },
   {
@@ -59,10 +54,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Personal",
-    items: [
-      { label: "Saved Recaps", href: "/saved-recaps", Icon: SavedIcon },
-      { label: "Settings", href: "/settings", Icon: SettingsIcon },
-    ],
+    items: [{ label: "Settings", href: "/settings", Icon: SettingsIcon }],
   },
 ];
 

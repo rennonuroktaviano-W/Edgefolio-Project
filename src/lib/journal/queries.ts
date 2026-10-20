@@ -71,7 +71,7 @@ export function toJournalEntry(
     review: row.review,
     mood: row.mood,
     tradeId: row.trade_id,
-    visibility: row.visibility === "public" ? "public" : "private",
+    visibility: "private",
     entryDate: row.entry_date,
     direction: asDirection(row.direction),
     entryPrice: num(row.entry_price),
@@ -116,8 +116,8 @@ export function toJournalRow(input: JournalInput, author?: {
 }
 
 // Signed URLs so a private bucket can still render images. The admin client
-// can sign any object (needed to show other authors' public recap images);
-// falls back to the user's own client when the service key is absent.
+// can sign any object; falls back to the user's own client when the service
+// key is absent.
 async function signedUrlsFor(paths: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (paths.length === 0) return map;
