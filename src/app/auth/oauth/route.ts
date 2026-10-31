@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resolveSiteOrigin } from "@/lib/auth/origin";
 import { safeNextPath } from "@/lib/auth/redirect";
 
 const PROVIDERS = ["google"] as const;
@@ -12,7 +13,8 @@ function isSupportedProvider(value: string): value is SupportedProvider {
 // Starts an OAuth sign-in through the server so a disabled/misconfigured
 // provider shows the friendly /auth/error page instead of Supabase's raw JSON.
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = resolveSiteOrigin(request);
   const provider = searchParams.get("provider") ?? "google";
   const next = safeNextPath(searchParams.get("next"));
 
@@ -28,26 +30,32 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/auth/error?reason=not_configured`);
   }
 
-  // The SDK builds the authorize URL locally, so probe the public settings to
-  // detect a provider that has not been enabled in the dashboard yet.
+  // The SDK builds the authorize URL locally, so it cannot detect a dead or
+  // paused Supabase project. Probe the public settings endpoint first: when it
+  // is unreachable, show a friendly error instead of sending the browser to a
+  // host that does not resolve ("This site can't be reached").
+  let providerEnabled: boolean;
+
   try {
     const settingsResponse = await fetch(`${supabaseUrl}/auth/v1/settings`, {
       headers: { apikey: supabaseAnonKey },
       cache: "no-store",
     });
 
-    if (settingsResponse.ok) {
-      const settings = (await settingsResponse.json()) as {
-        external?: Record<string, boolean>;
-      };
-      if (settings.external?.[provider] !== true) {
-        return NextResponse.redirect(
-          `${origin}/auth/error?reason=provider_disabled`,
-        );
-      }
+    if (!settingsResponse.ok) {
+      return NextResponse.redirect(`${origin}/auth/error?reason=unreachable`);
     }
+
+    const settings = (await settingsResponse.json()) as {
+      external?: Record<string, boolean>;
+    };
+    providerEnabled = settings.external?.[provider] === true;
   } catch {
-    // If the probe fails, fall through and let the provider redirect decide.
+    return NextResponse.redirect(`${origin}/auth/error?reason=unreachable`);
+  }
+
+  if (!providerEnabled) {
+    return NextResponse.redirect(`${origin}/auth/error?reason=provider_disabled`);
   }
 
   const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;

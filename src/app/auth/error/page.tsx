@@ -23,6 +23,10 @@ const REASONS: Record<string, Reason> = {
     title: "Unsupported sign-in method",
     body: "That sign-in option is not supported. Please sign in with your username or email.",
   },
+  unreachable: {
+    title: "Authentication service is unreachable",
+    body: "We couldn't reach the authentication server. It may be paused or offline right now — please try again in a moment, or sign in with your username or email.",
+  },
   not_configured: {
     title: "Sign-in isn't configured yet",
     body: "Authentication is not available right now. Please try again later.",
